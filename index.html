@@ -1,25 +1,4 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDt5yps3eRaGD4G58XiHM0anZDG8NgEidQ",
-  authDomain: "my-soundcloud-d1433.firebaseapp.com",
-  databaseURL: "https://my-soundcloud-d1433-default-rtdb.firebaseio.com",
-  projectId: "my-soundcloud-d1433",
-  storageBucket: "my-soundcloud-d1433.firebasestorage.app",
-  messagingSenderId: "441554901767",
-  appId: "1:441554901767:web:f107e1ce7a459650cec3a2"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-
-
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -39,7 +18,6 @@ const app = initializeApp(firebaseConfig);
             min-height: 100vh;
         }
 
-        /* Animations */
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -65,7 +43,6 @@ const app = initializeApp(firebaseConfig);
             50% { transform: scale(1.3); }
         }
 
-        /* Header */
         .header {
             background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
             color: white;
@@ -119,7 +96,6 @@ const app = initializeApp(firebaseConfig);
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            object-fit: cover;
             cursor: pointer;
             background: white;
             display: flex;
@@ -135,7 +111,6 @@ const app = initializeApp(firebaseConfig);
             border-color: white;
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -226,7 +201,6 @@ const app = initializeApp(firebaseConfig);
             color: #ff5500;
         }
 
-        /* Upload Section */
         .upload-section {
             display: none;
             background: rgba(255,255,255,0.95);
@@ -255,7 +229,6 @@ const app = initializeApp(firebaseConfig);
             transform: scale(1.02);
         }
 
-        /* Tracks Container */
         .tracks-container {
             max-width: 1200px;
             margin: 30px auto;
@@ -312,7 +285,6 @@ const app = initializeApp(firebaseConfig);
             margin-right: 25px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: relative;
         }
 
         .track-info {
@@ -386,11 +358,7 @@ const app = initializeApp(firebaseConfig);
             border-color: transparent;
         }
 
-        .likes-count {
-            font-weight: bold;
-        }
-
-        .delete-btn, .add-to-playlist-btn {
+        .delete-btn {
             background: transparent;
             border: 2px solid #ccc;
             color: #666;
@@ -407,11 +375,6 @@ const app = initializeApp(firebaseConfig);
             border-color: #dc3545;
         }
 
-        .add-to-playlist-btn:hover {
-            background: #f0f0f0;
-        }
-
-        /* Player */
         .player {
             display: none;
             position: fixed;
@@ -516,7 +479,6 @@ const app = initializeApp(firebaseConfig);
             display: flex;
             align-items: center;
             gap: 10px;
-            min-width: 150px;
         }
 
         .volume-icon {
@@ -547,11 +509,6 @@ const app = initializeApp(firebaseConfig);
         .empty-state h3 {
             margin-bottom: 15px;
             font-size: 28px;
-        }
-
-        .empty-state p {
-            color: rgba(255,255,255,0.7);
-            font-size: 16px;
         }
 
         .file-label {
@@ -630,7 +587,6 @@ const app = initializeApp(firebaseConfig);
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
         <div class="logo">🎵 SoundCloud</div>
         <div id="navButtons" class="nav-buttons">
@@ -645,7 +601,6 @@ const app = initializeApp(firebaseConfig);
         </div>
     </div>
 
-    <!-- Login Modal -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('loginModal')">&times;</span>
@@ -664,7 +619,6 @@ const app = initializeApp(firebaseConfig);
         </div>
     </div>
 
-    <!-- Register Modal -->
     <div id="registerModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('registerModal')">&times;</span>
@@ -683,7 +637,6 @@ const app = initializeApp(firebaseConfig);
         </div>
     </div>
 
-    <!-- Upload Section -->
     <div id="uploadSection" class="upload-section">
         <h2 style="margin-bottom: 20px; color: #333; font-size: 28px;">📤 Загрузить трек</h2>
         <div class="upload-area" onclick="document.getElementById('audioFile').click()">
@@ -709,13 +662,11 @@ const app = initializeApp(firebaseConfig);
         </div>
     </div>
 
-    <!-- Tracks Container -->
     <div class="tracks-container">
         <h2 class="section-title">🔥 Популярные треки</h2>
         <div id="tracksList"></div>
     </div>
 
-    <!-- Player -->
     <div id="player" class="player">
         <div class="player-content">
             <img id="playerCover" class="player-cover" src="" alt="">
@@ -739,108 +690,33 @@ const app = initializeApp(firebaseConfig);
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
     <script>
-        // ВАЖНО: Замените эти данные на свои из Firebase Console!
-        // Инструкция в комментариях ниже
-        const FIREBASE_CONFIG = {
-            // Получите эти данные на https://console.firebase.google.com
-            // 1. Создайте проект
-            // 2. Project Settings > Add app > Web
-            // 3. Скопируйте firebaseConfig сюда
-            
-            // ВРЕМЕННАЯ КОНФИГУРАЦИЯ (работает только локально через IndexedDB)
-            useLocalStorage: true  // Используем локальное хранилище как временное решение
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDt5yps3eRaGD4G58XiHM0anZDG8NgEidQ",
+            authDomain: "my-soundcloud-d1433.firebaseapp.com",
+            databaseURL: "https://my-soundcloud-d1433-default-rtdb.firebaseio.com",
+            projectId: "my-soundcloud-d1433",
+            storageBucket: "my-soundcloud-d1433.firebasestorage.app",
+            messagingSenderId: "441554901767",
+            appId: "1:441554901767:web:f107e1ce7a459650cec3a2"
         };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
 
         let currentUser = null;
         let currentTrack = null;
-        let db = null;
+        let tracksListener = null;
 
-        // IndexedDB setup (временное решение до настройки Firebase)
-        function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('SoundCloudDB', 2);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    
-                    if (!db.objectStoreNames.contains('users')) {
-                        db.createObjectStore('users', { keyPath: 'username' });
-                    }
-                    if (!db.objectStoreNames.contains('tracks')) {
-                        const trackStore = db.createObjectStore('tracks', { keyPath: 'id' });
-                        trackStore.createIndex('author', 'author', { unique: false });
-                        trackStore.createIndex('timestamp', 'timestamp', { unique: false });
-                    }
-                    if (!db.objectStoreNames.contains('likes')) {
-                        const likeStore = db.createObjectStore('likes', { keyPath: 'id' });
-                        likeStore.createIndex('userId', 'userId', { unique: false });
-                        likeStore.createIndex('trackId', 'trackId', { unique: false });
-                    }
-                };
-            });
-        }
-
-        async function dbGet(storeName, key) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readonly');
-                const store = transaction.objectStore(storeName);
-                const request = store.get(key);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function dbPut(storeName, data) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.put(data);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function dbGetAll(storeName) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readonly');
-                const store = transaction.objectStore(storeName);
-                const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function dbDelete(storeName, key) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.delete(key);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function dbQuery(storeName, indexName, value) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([storeName], 'readonly');
-                const store = transaction.objectStore(storeName);
-                const index = store.index(indexName);
-                const request = index.getAll(value);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        // Initialize
         window.onload = async function() {
-            await initDB();
             await checkAuth();
             await loadTracks();
             
@@ -896,13 +772,15 @@ const app = initializeApp(firebaseConfig);
             }
 
             try {
-                const existingUser = await dbGet('users', username);
-                if (existingUser) {
+                const userRef = database.ref('users/' + username);
+                const snapshot = await userRef.once('value');
+                
+                if (snapshot.exists()) {
                     errorDiv.textContent = 'Пользователь уже существует';
                     return;
                 }
 
-                await dbPut('users', { username, password });
+                await userRef.set({ password: password });
                 errorDiv.textContent = '';
                 alert('✅ Регистрация успешна! Войдите в систему.');
                 showLogin();
@@ -932,8 +810,11 @@ const app = initializeApp(firebaseConfig);
                     return;
                 }
 
-                const user = await dbGet('users', username);
-                if (!user || user.password !== password) {
+                const userRef = database.ref('users/' + username);
+                const snapshot = await userRef.once('value');
+                const userData = snapshot.val();
+                
+                if (!userData || userData.password !== password) {
                     errorDiv.textContent = 'Неверное имя пользователя или пароль';
                     return;
                 }
@@ -972,6 +853,7 @@ const app = initializeApp(firebaseConfig);
         async function uploadTrack() {
             const title = document.getElementById('trackTitle').value.trim();
             const audioFile = document.getElementById('audioFile').files[0];
+            const coverFile = document.getElementById('coverFile').files[0];
             const errorDiv = document.getElementById('uploadError');
             const successDiv = document.getElementById('uploadSuccess');
 
@@ -984,25 +866,31 @@ const app = initializeApp(firebaseConfig);
                 successDiv.textContent = '⏳ Загрузка... Пожалуйста, подождите';
                 errorDiv.textContent = '';
                 
-                const audioBase64 = await fileToBase64(audioFile);
-                const coverFile = document.getElementById('coverFile').files[0];
-                let coverBase64 = null;
+                const trackId = 'track_' + Date.now();
+                
+                // Upload audio to Firebase Storage
+                const audioRef = storage.ref('audio/' + trackId);
+                await audioRef.put(audioFile);
+                const audioURL = await audioRef.getDownloadURL();
+                
+                // Upload cover if exists
+                let coverURL = null;
                 if (coverFile) {
-                    coverBase64 = await fileToBase64(coverFile);
+                    const coverRef = storage.ref('covers/' + trackId);
+                    await coverRef.put(coverFile);
+                    coverURL = await coverRef.getDownloadURL();
                 }
 
-                const trackId = 'track_' + Date.now();
-                const trackData = {
+                // Save track metadata to Realtime Database
+                await database.ref('tracks/' + trackId).set({
                     id: trackId,
                     title: title,
                     author: currentUser,
-                    audioData: audioBase64,
-                    coverData: coverBase64,
+                    audioURL: audioURL,
+                    coverURL: coverURL,
                     timestamp: Date.now(),
                     likes: 0
-                };
-
-                await dbPut('tracks', trackData);
+                });
 
                 successDiv.textContent = '✅ Трек успешно загружен!';
                 
@@ -1011,8 +899,6 @@ const app = initializeApp(firebaseConfig);
                 document.getElementById('coverFile').value = '';
                 document.getElementById('coverPreview').innerHTML = '';
                 document.getElementById('uploadForm').style.display = 'none';
-
-                await loadTracks();
 
                 setTimeout(() => {
                     successDiv.textContent = '';
@@ -1025,82 +911,86 @@ const app = initializeApp(firebaseConfig);
             }
         }
 
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
         async function loadTracks() {
             const tracksDiv = document.getElementById('tracksList');
             tracksDiv.innerHTML = '<div class="loading">⏳ Загрузка треков...</div>';
 
             try {
-                const tracks = await dbGetAll('tracks');
-                
-                if (!tracks || tracks.length === 0) {
-                    tracksDiv.innerHTML = `
-                        <div class="empty-state">
-                            <h3>🎵 Пока нет треков</h3>
-                            <p>Станьте первым, кто загрузит музыку!</p>
-                        </div>
-                    `;
-                    return;
+                // Remove old listener if exists
+                if (tracksListener) {
+                    database.ref('tracks').off('value', tracksListener);
                 }
 
-                // Get likes count for each track
-                const allLikes = await dbGetAll('likes');
-                const likesMap = {};
-                const userLikes = new Set();
-                
-                allLikes.forEach(like => {
-                    if (!likesMap[like.trackId]) {
-                        likesMap[like.trackId] = 0;
-                    }
-                    likesMap[like.trackId]++;
+                // Listen for real-time updates
+                tracksListener = database.ref('tracks').on('value', async (snapshot) => {
+                    const tracksData = snapshot.val();
                     
-                    if (currentUser && like.userId === currentUser) {
-                        userLikes.add(like.trackId);
+                    if (!tracksData) {
+                        tracksDiv.innerHTML = `
+                            <div class="empty-state">
+                                <h3>🎵 Пока нет треков</h3>
+                                <p>Станьте первым, кто загрузит музыку!</p>
+                            </div>
+                        `;
+                        return;
                     }
+
+                    const tracks = Object.values(tracksData);
+                    
+                    // Get likes data
+                    const likesSnapshot = await database.ref('likes').once('value');
+                    const likesData = likesSnapshot.val() || {};
+                    
+                    const likesMap = {};
+                    const userLikes = new Set();
+                    
+                    Object.values(likesData).forEach(like => {
+                        if (!likesMap[like.trackId]) {
+                            likesMap[like.trackId] = 0;
+                        }
+                        likesMap[like.trackId]++;
+                        
+                        if (currentUser && like.userId === currentUser) {
+                            userLikes.add(like.trackId);
+                        }
+                    });
+
+                    // Sort by likes
+                    tracks.sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0));
+
+                    tracksDiv.innerHTML = tracks.map(track => {
+                        const likesCount = likesMap[track.id] || 0;
+                        const isLiked = userLikes.has(track.id);
+                        const coverSrc = track.coverURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><rect width="140" height="140" fill="%23667eea"/><text x="50%" y="50%" font-size="60" text-anchor="middle" dy=".3em">🎵</text></svg>';
+                        
+                        return `
+                        <div class="track-item">
+                            <div style="position: relative;">
+                                <img class="track-cover" src="${coverSrc}" alt="Cover">
+                                <div class="waveform">
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                </div>
+                            </div>
+                            <div class="track-info">
+                                <div class="track-title">${track.title}</div>
+                                <div class="track-author">👤 ${track.author}</div>
+                                <div class="track-controls">
+                                    <button class="play-btn" onclick='playTrack(${JSON.stringify(track).replace(/'/g, "&#39;")})'>▶</button>
+                                    ${currentUser ? `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${track.id}')" id="like-${track.id}">
+                                        ${isLiked ? '❤️' : '🤍'} <span class="likes-count" id="count-${track.id}">${likesCount}</span>
+                                    </button>` : `<div style="padding: 10px 20px; color: #999;">❤️ ${likesCount}</div>`}
+                                    ${currentUser === track.author || currentUser === 'admin' ? `<button class="delete-btn" onclick="deleteTrack('${track.id}')">🗑️ Удалить</button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
                 });
-
-                tracks.sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0));
-
-                tracksDiv.innerHTML = tracks.map(track => {
-                    const likesCount = likesMap[track.id] || 0;
-                    const isLiked = userLikes.has(track.id);
-                    const coverSrc = track.coverData || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><rect width="140" height="140" fill="%23667eea"/><text x="50%" y="50%" font-size="60" text-anchor="middle" dy=".3em">🎵</text></svg>';
-                    
-                    return `
-                    <div class="track-item">
-                        <div style="position: relative;">
-                            <img class="track-cover" src="${coverSrc}" alt="Cover">
-                            <div class="waveform">
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                            </div>
-                        </div>
-                        <div class="track-info">
-                            <div class="track-title">${track.title}</div>
-                            <div class="track-author">👤 ${track.author}</div>
-                            <div class="track-controls">
-                                <button class="play-btn" onclick='playTrackById("${track.id}")'>▶</button>
-                                ${currentUser ? `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${track.id}')" id="like-${track.id}">
-                                    ${isLiked ? '❤️' : '🤍'} <span class="likes-count" id="count-${track.id}">${likesCount}</span>
-                                </button>` : `<div style="padding: 10px 20px; color: #999;">❤️ ${likesCount}</div>`}
-                                ${currentUser === track.author || currentUser === 'admin' ? `<button class="delete-btn" onclick="deleteTrack('${track.id}')">🗑️ Удалить</button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                    `;
-                }).join('');
             } catch (error) {
                 console.error('Error loading tracks:', error);
                 tracksDiv.innerHTML = '<div class="error-message">❌ Ошибка загрузки треков</div>';
@@ -1114,43 +1004,21 @@ const app = initializeApp(firebaseConfig);
             }
 
             try {
-                const likeId = `${currentUser}_${trackId}`;
-                const existingLike = await dbGet('likes', likeId);
+                const likeId = currentUser + '_' + trackId;
+                const likeRef = database.ref('likes/' + likeId);
+                const snapshot = await likeRef.once('value');
                 
-                const likeBtn = document.getElementById(`like-${trackId}`);
-                const countSpan = document.getElementById(`count-${trackId}`);
-                let currentCount = parseInt(countSpan.textContent);
-
-                if (existingLike) {
-                    await dbDelete('likes', likeId);
-                    likeBtn.classList.remove('liked');
-                    likeBtn.innerHTML = `🤍 <span class="likes-count" id="count-${trackId}">${currentCount - 1}</span>`;
+                if (snapshot.exists()) {
+                    await likeRef.remove();
                 } else {
-                    await dbPut('likes', {
-                        id: likeId,
+                    await likeRef.set({
                         userId: currentUser,
                         trackId: trackId,
                         timestamp: Date.now()
                     });
-                    likeBtn.classList.add('liked');
-                    likeBtn.innerHTML = `❤️ <span class="likes-count" id="count-${trackId}">${currentCount + 1}</span>`;
                 }
-
-                // Reload to resort by likes
-                setTimeout(() => loadTracks(), 500);
             } catch (error) {
                 console.error('Error toggling like:', error);
-            }
-        }
-
-        async function playTrackById(trackId) {
-            try {
-                const track = await dbGet('tracks', trackId);
-                if (track) {
-                    playTrack(track);
-                }
-            } catch (error) {
-                console.error('Error playing track:', error);
             }
         }
 
@@ -1162,8 +1030,8 @@ const app = initializeApp(firebaseConfig);
             const playerAuthor = document.getElementById('playerAuthor');
 
             currentTrack = track;
-            audioPlayer.src = track.audioData;
-            playerCover.src = track.coverData || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70"><rect width="70" height="70" fill="%23667eea"/></svg>';
+            audioPlayer.src = track.audioURL;
+            playerCover.src = track.coverURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70"><rect width="70" height="70" fill="%23667eea"/></svg>';
             playerTitle.textContent = track.title;
             playerAuthor.textContent = track.author;
             
@@ -1278,15 +1146,26 @@ const app = initializeApp(firebaseConfig);
             }
 
             try {
-                await dbDelete('tracks', trackId);
+                // Delete track from database
+                await database.ref('tracks/' + trackId).remove();
                 
                 // Delete associated likes
-                const likes = await dbQuery('likes', 'trackId', trackId);
-                for (const like of likes) {
-                    await dbDelete('likes', like.id);
+                const likesSnapshot = await database.ref('likes').once('value');
+                const likesData = likesSnapshot.val() || {};
+                
+                for (const [likeId, like] of Object.entries(likesData)) {
+                    if (like.trackId === trackId) {
+                        await database.ref('likes/' + likeId).remove();
+                    }
                 }
                 
-                await loadTracks();
+                // Delete files from storage
+                try {
+                    await storage.ref('audio/' + trackId).delete();
+                    await storage.ref('covers/' + trackId).delete();
+                } catch (e) {
+                    console.log('Some files not found:', e);
+                }
                 
                 if (currentTrack && currentTrack.id === trackId) {
                     document.getElementById('player').style.display = 'none';
@@ -1298,7 +1177,6 @@ const app = initializeApp(firebaseConfig);
             }
         }
 
-        // Cover preview
         document.getElementById('coverFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file && file.type.startsWith('image/')) {
