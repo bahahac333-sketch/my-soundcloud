@@ -1346,6 +1346,8 @@
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
+
+        function toggleMute() {
             const audioPlayer = document.getElementById('audioPlayer');
             const volumeSlider = document.getElementById('volumeSlider');
             
@@ -1380,30 +1382,21 @@
             }
 
             try {
-                // Delete track from database
                 await database.ref('tracks/' + trackId).remove();
                 
                 // Delete associated likes
                 const likesSnapshot = await database.ref('likes').once('value');
                 const likesData = likesSnapshot.val() || {};
-                
                 for (const [likeId, like] of Object.entries(likesData)) {
                     if (like.trackId === trackId) {
                         await database.ref('likes/' + likeId).remove();
                     }
                 }
                 
-                // Delete files from storage
-                try {
-                    await storage.ref('audio/' + trackId).delete();
-                    await storage.ref('covers/' + trackId).delete();
-                } catch (e) {
-                    console.log('Some files not found:', e);
-                }
-                
                 if (currentTrack && currentTrack.id === trackId) {
                     document.getElementById('player').style.display = 'none';
                     document.getElementById('audioPlayer').pause();
+                    currentTrack = null;
                 }
             } catch (error) {
                 console.error('Error deleting track:', error);
