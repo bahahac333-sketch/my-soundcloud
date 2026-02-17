@@ -1,1592 +1,754 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 SoundCloud Clone</title>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Interstate', 'Lucida Grande', Arial, sans-serif;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-            min-height: 100vh;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes playingPulse {
-            0%, 100% { box-shadow: 0 10px 30px rgba(255,85,0,0.4); }
-            50% { box-shadow: 0 10px 40px rgba(255,85,0,0.8); }
-        }
-
-        @keyframes wave {
-            0%, 100% { height: 20%; }
-            50% { height: 100%; }
-        }
-
-        @keyframes likeAnimation {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-        }
-
-        .header {
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(255, 85, 0, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .nav-buttons button {
-            background: rgba(255,255,255,0.2);
-            border: 2px solid white;
-            color: white;
-            padding: 10px 20px;
-            margin-left: 10px;
-            cursor: pointer;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .nav-buttons button:hover {
-            background: white;
-            color: #ff5500;
-            transform: translateY(-2px);
-        }
-
-        .user-info {
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-        }
-
-        .user-avatar:hover {
-            transform: scale(1.1);
-            border-color: white;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-            margin: 8% auto;
-            padding: 40px;
-            border-radius: 20px;
-            width: 450px;
-            max-width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease;
-        }
-
-        .modal-content h2 {
-            margin-bottom: 25px;
-            color: #333;
-            text-align: center;
-            font-size: 28px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #ff5500;
-            box-shadow: 0 0 10px rgba(255,85,0,0.2);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255,85,0,0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,85,0,0.4);
-        }
-
-        .switch-auth {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .switch-auth:hover {
-            color: #ff5500;
-        }
-
-        .upload-section {
-            display: none;
-            background: rgba(255,255,255,0.95);
-            margin: 30px auto;
-            padding: 40px;
-            max-width: 800px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            animation: fadeIn 0.5s ease;
-        }
-
-        .upload-area {
-            border: 3px dashed #ff5500;
-            padding: 60px;
-            text-align: center;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
-        }
-
-        .upload-area:hover {
-            border-color: #ff8800;
-            background: #fff5f0;
-            transform: scale(1.02);
-        }
-
-        .tracks-container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        .section-title {
-            color: white;
-            font-size: 32px;
-            margin-bottom: 20px;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .track-item {
-            background: rgba(255, 255, 255, 0.95);
-            margin-bottom: 20px;
-            padding: 25px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            animation: fadeIn 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .track-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,85,0,0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .track-item:hover::before {
-            left: 100%;
-        }
-
-        .track-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(255,85,0,0.3);
-        }
-
-        .track-cover {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-right: 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .track-info {
-            flex: 1;
-        }
-
-        .track-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .track-author {
-            color: #999;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .track-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .play-btn {
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(255,85,0,0.4);
-            transition: all 0.3s ease;
-        }
-
-        .play-btn:hover {
-            transform: scale(1.15);
-            box-shadow: 0 6px 20px rgba(255,85,0,0.6);
-        }
-
-        .like-btn {
-            background: transparent;
-            border: 2px solid #ff5500;
-            color: #ff5500;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-
-        .like-btn:hover {
-            background: rgba(255,85,0,0.1);
-            transform: scale(1.05);
-        }
-
-        .like-btn.liked {
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            color: white;
-            border-color: transparent;
-        }
-
-        .delete-btn {
-            background: transparent;
-            border: 2px solid #ccc;
-            color: #666;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        .delete-btn:hover {
-            background: #dc3545;
-            color: white;
-            border-color: #dc3545;
-        }
-
-        .player {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #2d2d44 0%, #1e1e2e 100%);
-            color: white;
-            padding: 20px;
-            box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
-            z-index: 99;
-        }
-
-        .player-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .player-cover {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .player-info {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .player-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
-
-        .player-controls {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex: 2;
-        }
-
-        .progress-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .time-display {
-            font-size: 13px;
-            color: #ccc;
-            min-width: 50px;
-        }
-
-        .seek-slider, .volume-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255,255,255,0.2);
-            border-radius: 5px;
-            outline: none;
-            cursor: pointer;
-            height: 8px;
-        }
-
-        .seek-slider {
-            flex: 1;
-        }
-
-        .volume-slider {
-            width: 120px;
-        }
-
-        .seek-slider::-webkit-slider-thumb,
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        .seek-slider::-moz-range-thumb,
-        .volume-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-        }
-
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .volume-icon {
-            font-size: 22px;
-            cursor: pointer;
-        }
-
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .success-message {
-            color: #28a745;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: white;
-        }
-
-        .empty-state h3 {
-            margin-bottom: 15px;
-            font-size: 28px;
-        }
-
-        .file-label {
-            display: inline-block;
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #ff5500 0%, #ff8800 100%);
-            color: white;
-            border-radius: 25px;
-            cursor: pointer;
-            margin: 15px 0;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-
-        .file-label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255,85,0,0.4);
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: white;
-            font-size: 18px;
-        }
-
-        .waveform {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            display: flex;
-            align-items: flex-end;
-            gap: 2px;
-            padding: 0 8px;
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
-        .wave-bar {
-            flex: 1;
-            background: linear-gradient(to top, #ff5500, #ff8800);
-            border-radius: 2px 2px 0 0;
-            animation: wave 1.2s ease-in-out infinite;
-        }
-
-        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
-        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
-        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
-        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
-        .wave-bar:nth-child(6) { animation-delay: 0.5s; }
-
-        .sotd-card {
-            min-width: 200px;
-            max-width: 200px;
-            background: rgba(255,255,255,0.95);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            animation: fadeIn 0.5s ease;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .sotd-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 0 15px 35px rgba(255,85,0,0.4);
-        }
-
-        .sotd-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: linear-gradient(135deg, #ff5500, #ff8800);
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 20px;
-            z-index: 2;
-            box-shadow: 0 2px 8px rgba(255,85,0,0.5);
-        }
-
-        .sotd-cover {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .sotd-info {
-            padding: 15px;
-        }
-
-        .sotd-title {
-            font-weight: bold;
-            font-size: 15px;
-            color: #333;
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sotd-author {
-            color: #999;
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-
-        .sotd-play {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(135deg, #ff5500, #ff8800);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .sotd-play:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(255,85,0,0.5);
-        }
-
-        .sotd-likes {
-            color: #ff5500;
-            font-size: 13px;
-            margin-top: 8px;
-            text-align: center;
-        }
-            float: right;
-            font-size: 32px;
-            font-weight: bold;
-            color: #999;
-            cursor: pointer;
-            line-height: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .close-modal:hover {
-            color: #ff5500;
-            transform: rotate(90deg);
-        }
-
-        .upload-form {
-            display: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 SoundCloud</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#1e1e2e,#2d2d44); min-height:100vh; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes wave { 0%,100%{height:20%} 50%{height:100%} }
+@keyframes playingPulse { 0%,100%{box-shadow:0 10px 30px rgba(255,85,0,0.4)} 50%{box-shadow:0 10px 40px rgba(255,85,0,0.9)} }
+@keyframes likePop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+
+.header { background:linear-gradient(135deg,#ff5500,#ff8800); padding:14px 28px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; box-shadow:0 4px 20px rgba(255,85,0,0.3); }
+.logo { font-size:24px; font-weight:bold; color:white; }
+.nav-buttons button { background:rgba(255,255,255,0.2); border:2px solid white; color:white; padding:8px 16px; margin-left:8px; cursor:pointer; border-radius:25px; font-size:13px; font-weight:bold; transition:all 0.3s; }
+.nav-buttons button:hover { background:white; color:#ff5500; }
+.user-info { display:flex; align-items:center; gap:10px; }
+.av-btn { width:38px; height:38px; border-radius:50%; cursor:pointer; border:3px solid rgba(255,255,255,0.5); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:18px; background:white; transition:all 0.3s; flex-shrink:0; }
+.av-btn:hover { border-color:white; transform:scale(1.1); }
+.av-btn img { width:100%; height:100%; object-fit:cover; }
+.hbtn { background:rgba(255,255,255,0.2); border:2px solid white; color:white; padding:8px 14px; border-radius:25px; cursor:pointer; font-size:12px; font-weight:bold; transition:all 0.3s; white-space:nowrap; }
+.hbtn:hover { background:white; color:#ff5500; }
+
+.modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); overflow-y:auto; }
+.mbox { background:white; margin:5% auto; padding:32px; border-radius:18px; width:480px; max-width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.4); position:relative; animation:slideIn 0.3s; }
+.mbox.wide { width:700px; }
+.mclose { position:absolute; top:14px; right:18px; font-size:26px; cursor:pointer; color:#aaa; transition:all 0.3s; line-height:1; }
+.mclose:hover { color:#ff5500; transform:rotate(90deg); }
+.mbox h2 { margin-bottom:20px; color:#333; font-size:22px; }
+.fg { margin-bottom:16px; }
+.fg label { display:block; margin-bottom:6px; color:#555; font-size:13px; font-weight:bold; }
+.fg input, .fg textarea { width:100%; padding:11px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; transition:all 0.3s; font-family:inherit; }
+.fg input:focus, .fg textarea:focus { outline:none; border-color:#ff5500; box-shadow:0 0 8px rgba(255,85,0,0.2); }
+.obtn { width:100%; padding:13px; background:linear-gradient(135deg,#ff5500,#ff8800); color:white; border:none; border-radius:25px; font-size:15px; font-weight:bold; cursor:pointer; margin-top:8px; transition:all 0.3s; box-shadow:0 4px 15px rgba(255,85,0,0.3); }
+.obtn:hover { transform:translateY(-2px); }
+.sw { text-align:center; margin-top:14px; color:#888; cursor:pointer; font-size:14px; }
+.sw:hover { color:#ff5500; }
+.err { color:#dc3545; font-size:13px; margin-top:7px; text-align:center; }
+.suc { color:#28a745; font-size:13px; margin-top:7px; text-align:center; }
+input[type="file"] { display:none; }
+.flbl { display:inline-block; padding:10px 20px; background:linear-gradient(135deg,#ff5500,#ff8800); color:white; border-radius:25px; cursor:pointer; font-weight:bold; font-size:13px; transition:all 0.3s; }
+.flbl:hover { transform:translateY(-2px); box-shadow:0 4px 15px rgba(255,85,0,0.4); }
+
+.tabs { display:flex; gap:4px; border-bottom:2px solid #f0f0f0; margin-bottom:18px; }
+.tab { padding:9px 16px; cursor:pointer; border:none; background:transparent; font-size:13px; color:#aaa; border-bottom:3px solid transparent; margin-bottom:-2px; font-weight:bold; transition:all 0.3s; }
+.tab.active { color:#ff5500; border-bottom-color:#ff5500; }
+
+.upload-section { display:none; background:rgba(255,255,255,0.97); margin:22px auto; padding:32px; max-width:780px; border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,0.2); animation:fadeIn 0.5s; }
+.upload-area { border:3px dashed #ff5500; padding:45px; text-align:center; border-radius:14px; margin-bottom:22px; cursor:pointer; background:linear-gradient(135deg,#fff5f0,#fff); transition:all 0.3s; }
+.upload-area:hover { background:#fff0e6; transform:scale(1.01); }
+.upload-form { display:none; }
+
+.sotd-section { max-width:1200px; margin:22px auto; padding:0 20px; display:none; }
+.sotd-list { display:flex; gap:16px; overflow-x:auto; padding-bottom:12px; scrollbar-width:thin; scrollbar-color:#ff5500 #2d2d44; }
+.sotd-card { min-width:185px; max-width:185px; background:rgba(255,255,255,0.97); border-radius:14px; overflow:hidden; box-shadow:0 8px 25px rgba(0,0,0,0.3); transition:all 0.3s; cursor:pointer; flex-shrink:0; }
+.sotd-card:hover { transform:translateY(-7px); box-shadow:0 14px 32px rgba(255,85,0,0.4); }
+.sotd-cover { width:100%; height:185px; object-fit:cover; display:block; }
+.sotd-badge { position:absolute; top:9px; left:9px; background:linear-gradient(135deg,#ff5500,#ff8800); color:white; font-size:10px; font-weight:bold; padding:3px 9px; border-radius:18px; }
+.sotd-info { padding:12px; }
+.sotd-title { font-weight:bold; font-size:13px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+.sotd-meta { color:#ff5500; font-size:11px; margin-top:7px; }
+
+.tracks-container { max-width:1200px; margin:22px auto; padding:0 20px 130px; }
+.sec-title { color:white; font-size:26px; margin-bottom:16px; text-align:center; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
+.track-item { background:rgba(255,255,255,0.97); margin-bottom:16px; padding:20px; border-radius:14px; display:flex; align-items:center; box-shadow:0 4px 18px rgba(0,0,0,0.2); transition:all 0.3s; animation:fadeIn 0.5s; position:relative; overflow:hidden; border:2px solid transparent; }
+.track-item:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(255,85,0,0.25); }
+.tr-cover { width:125px; height:125px; object-fit:cover; border-radius:10px; margin-right:20px; flex-shrink:0; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.tr-info { flex:1; min-width:0; }
+.tr-title { font-size:19px; font-weight:bold; color:#333; margin-bottom:5px; }
+.tr-author { color:#aaa; font-size:13px; margin-bottom:7px; }
+.tr-stats { display:flex; gap:16px; margin-bottom:11px; font-size:13px; color:#bbb; }
+.tr-stats b { color:#ff5500; }
+.tr-ctrl { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.play-btn { width:50px; height:50px; background:linear-gradient(135deg,#ff5500,#ff8800); border:none; border-radius:50%; color:white; font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(255,85,0,0.4); transition:all 0.3s; flex-shrink:0; }
+.play-btn:hover { transform:scale(1.12); }
+.like-btn { background:transparent; border:2px solid #ff5500; color:#ff5500; padding:8px 16px; border-radius:22px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:5px; transition:all 0.3s; font-weight:bold; }
+.like-btn:hover { background:rgba(255,85,0,0.1); }
+.like-btn.liked { background:linear-gradient(135deg,#ff5500,#ff8800); color:white; border-color:transparent; animation:likePop 0.4s; }
+.cbtn { background:transparent; border:2px solid #ccc; color:#777; padding:7px 13px; border-radius:18px; cursor:pointer; font-size:12px; transition:all 0.3s; }
+.cbtn:hover { background:#f0f0f0; }
+.cbtn.lyr { border-color:#667eea; color:#667eea; }
+.cbtn.lyr:hover { background:#667eea; color:white; }
+.cbtn.del:hover { background:#dc3545; color:white; border-color:#dc3545; }
+.cbtn.ae { border-color:#ff8800; color:#ff8800; }
+.cbtn.ae:hover { background:#ff8800; color:white; }
+.cbtn.ban { border-color:#dc3545; color:#dc3545; }
+.cbtn.ban:hover { background:#dc3545; color:white; }
+
+.waveform { position:absolute; bottom:0; left:0; right:0; height:42px; display:flex; align-items:flex-end; gap:2px; padding:0 7px; opacity:0.22; pointer-events:none; }
+.wb { flex:1; background:linear-gradient(to top,#ff5500,#ff8800); border-radius:2px 2px 0 0; animation:wave 1.2s ease-in-out infinite; }
+.wb:nth-child(2){animation-delay:0.1s}.wb:nth-child(3){animation-delay:0.2s}.wb:nth-child(4){animation-delay:0.3s}.wb:nth-child(5){animation-delay:0.4s}.wb:nth-child(6){animation-delay:0.5s}
+
+.player { display:none; position:fixed; bottom:0; left:0; right:0; background:linear-gradient(135deg,#2d2d44,#1e1e2e); color:white; padding:16px 22px; box-shadow:0 -4px 28px rgba(0,0,0,0.5); z-index:99; }
+.player-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:16px; }
+.pl-cover { width:60px; height:60px; object-fit:cover; border-radius:9px; flex-shrink:0; }
+.pl-info { min-width:140px; }
+.pl-title { font-weight:bold; font-size:14px; margin-bottom:2px; }
+.pl-author { color:#ccc; font-size:12px; }
+.pl-ctrl { flex:1; display:flex; align-items:center; gap:14px; }
+.pbtn { width:44px; height:44px; background:linear-gradient(135deg,#ff5500,#ff8800); border:none; border-radius:50%; color:white; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.3s; }
+.pbtn:hover { transform:scale(1.1); }
+.pw { flex:1; display:flex; align-items:center; gap:9px; }
+.t { font-size:11px; color:#ccc; min-width:38px; }
+.seek, .vslider { -webkit-appearance:none; appearance:none; background:rgba(255,255,255,0.2); border-radius:4px; outline:none; cursor:pointer; height:6px; }
+.seek { flex:1; }
+.vslider { width:90px; }
+.seek::-webkit-slider-thumb,.vslider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:linear-gradient(135deg,#ff5500,#ff8800); border-radius:50%; cursor:pointer; }
+.vw { display:flex; align-items:center; gap:7px; }
+.vic { font-size:19px; cursor:pointer; }
+
+.p-av { width:90px; height:90px; border-radius:50%; object-fit:cover; border:4px solid #ff5500; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:40px; background:linear-gradient(135deg,#667eea,#764ba2); overflow:hidden; }
+.p-av img { width:100%; height:100%; object-fit:cover; }
+.stn { font-size:24px; font-weight:bold; color:#ff5500; }
+.stl { font-size:10px; color:#999; text-transform:uppercase; }
+
+.qi { display:flex; align-items:center; gap:11px; padding:12px; background:#f8f8f8; border-radius:11px; margin-bottom:7px; transition:all 0.2s; }
+.qi:hover { background:#fff0ea; }
+.qnum { font-size:17px; font-weight:bold; color:#ff5500; min-width:26px; text-align:center; }
+.qcover { width:52px; height:52px; border-radius:7px; object-fit:cover; flex-shrink:0; }
+.qinfo { flex:1; min-width:0; }
+.qtitle { font-weight:bold; color:#333; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qmeta { color:#aaa; font-size:11px; margin-top:2px; }
+.qplay { width:38px; height:38px; background:linear-gradient(135deg,#ff5500,#ff8800); border:none; border-radius:50%; color:white; font-size:15px; cursor:pointer; flex-shrink:0; transition:all 0.3s; }
+.qplay:hover { transform:scale(1.1); }
+
+.banned { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center; flex-direction:column; color:white; text-align:center; }
+.banned.show { display:flex; }
+.empty { text-align:center; padding:65px 20px; color:white; }
+.loading { text-align:center; padding:40px; color:white; font-size:17px; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">🎵 SoundCloud</div>
-        <div id="navButtons" class="nav-buttons">
-            <button onclick="showLogin()">Войти</button>
-            <button onclick="showRegister()">Регистрация</button>
-        </div>
-        <div id="userInfo" class="user-info" style="display: none;">
-            <div id="userAvatar" class="user-avatar">👤</div>
-            <span id="username" style="cursor: pointer; font-weight: bold;"></span>
-            <button onclick="showSaved()" id="savedBtn" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: bold;">❤️ Сохранённые</button>
-            <button onclick="showUpload()" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: bold;">📤 Загрузить</button>
-            <button onclick="logout()" style="background: transparent; border: 2px solid white; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer;">Выйти</button>
-        </div>
-    </div>
 
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('loginModal')">&times;</span>
-            <h2>🎵 Вход</h2>
-            <div class="form-group">
-                <label>Имя пользователя</label>
-                <input type="text" id="loginUsername" placeholder="Введите имя пользователя">
-            </div>
-            <div class="form-group">
-                <label>Пароль</label>
-                <input type="password" id="loginPassword" placeholder="Введите пароль">
-            </div>
-            <button class="btn-primary" onclick="login()">Войти</button>
-            <div id="loginError" class="error-message"></div>
-            <div class="switch-auth" onclick="showRegister()">Нет аккаунта? Зарегистрируйтесь</div>
-        </div>
-    </div>
+<div class="banned" id="bannedScreen">
+    <div style="font-size:75px">🚫</div>
+    <h1 style="margin:18px 0 10px;font-size:32px">Аккаунт заблокирован</h1>
+    <p style="color:#ccc;font-size:16px">Ваш аккаунт был заблокирован администратором</p>
+</div>
 
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('registerModal')">&times;</span>
-            <h2>✨ Регистрация</h2>
-            <div class="form-group">
-                <label>Имя пользователя</label>
-                <input type="text" id="registerUsername" placeholder="Введите имя пользователя">
-            </div>
-            <div class="form-group">
-                <label>Пароль</label>
-                <input type="password" id="registerPassword" placeholder="Введите пароль">
-            </div>
-            <button class="btn-primary" onclick="register()">Зарегистрироваться</button>
-            <div id="registerError" class="error-message"></div>
-            <div class="switch-auth" onclick="showLogin()">Уже есть аккаунт? Войдите</div>
-        </div>
+<div class="header">
+    <div class="logo">🎵 SoundCloud</div>
+    <div id="navBtns" class="nav-buttons">
+        <button onclick="om('loginM')">Войти</button>
+        <button onclick="om('regM')">Регистрация</button>
     </div>
-
-    <!-- Lyrics Modal -->
-    <div id="lyricsModal" class="modal">
-        <div class="modal-content" style="width:600px; max-width:95%; max-height:80vh; overflow-y:auto;">
-            <span class="close-modal" onclick="closeModal('lyricsModal')">&times;</span>
-            <h2 id="lyricsTitleModal" style="margin-bottom:5px;"></h2>
-            <p id="lyricsAuthorModal" style="color:#999; margin-bottom:20px; font-size:14px;"></p>
-            <div id="lyricsText" style="white-space:pre-wrap; line-height:1.8; font-size:15px; color:#333; background:#f8f8f8; padding:20px; border-radius:12px;"></div>
-        </div>
+    <div id="userUI" class="user-info" style="display:none;">
+        <div class="av-btn" onclick="openProfile()" id="hdrAv">👤</div>
+        <span style="color:white;font-weight:bold;cursor:pointer;font-size:14px;" onclick="openProfile()" id="hdrName"></span>
+        <button class="hbtn" onclick="openSaved()">❤️ Сохранённые</button>
+        <button class="hbtn" onclick="showUpload()">📤 Загрузить</button>
+        <button class="hbtn" style="background:transparent;" onclick="logout()">Выйти</button>
     </div>
+</div>
 
-    <!-- Saved Tracks Modal -->
-    <div id="savedModal" class="modal">
-        <div class="modal-content" style="width: 700px; max-width: 95%; max-height: 80vh; overflow-y: auto;">
-            <span class="close-modal" onclick="closeModal('savedModal')">&times;</span>
-            <h2>❤️ Сохранённые треки</h2>
-            <div id="savedList" style="margin-top: 20px;"></div>
-        </div>
+<!-- LOGIN -->
+<div id="loginM" class="modal">
+    <div class="mbox">
+        <span class="mclose" onclick="cm('loginM')">&times;</span>
+        <h2>🎵 Вход</h2>
+        <div class="fg"><label>Имя пользователя</label><input id="lUser" placeholder="Введите имя"></div>
+        <div class="fg"><label>Пароль</label><input type="password" id="lPass" placeholder="Введите пароль"></div>
+        <button class="obtn" onclick="login()">Войти</button>
+        <div id="lErr" class="err"></div>
+        <div class="sw" onclick="sm('loginM','regM')">Нет аккаунта? Зарегистрируйтесь</div>
     </div>
+</div>
 
-    <div id="uploadSection" class="upload-section">
-        <h2 style="margin-bottom: 20px; color: #333; font-size: 28px;">📤 Загрузить трек</h2>
-        <div class="upload-area" onclick="document.getElementById('audioFile').click()">
-            <p style="font-size: 24px; margin-bottom: 15px;">🎵 Выберите аудио файл</p>
-            <p style="color: #999;">Поддерживаемые форматы: MP3, WAV, OGG</p>
-            <p style="color: #ff8800; margin-top: 8px; font-size: 13px;">⚠️ Максимальный размер файла: 9 МБ</p>
-        </div>
-        <input type="file" id="audioFile" accept="audio/*" onchange="handleAudioSelect(event)">
-        
-        <div id="uploadForm" class="upload-form">
-            <div class="form-group">
-                <label>Название трека</label>
-                <input type="text" id="trackTitle" placeholder="Введите название">
-            </div>
-            <div class="form-group">
-                <label>Текст песни (необязательно)</label>
-                <textarea id="trackLyrics" placeholder="Вставьте текст песни сюда..." style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; min-height:150px; resize:vertical; font-family:inherit; transition:all 0.3s ease;"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Обложка трека (необязательно)</label>
-                <label for="coverFile" class="file-label">📷 Выбрать изображение</label>
-                <input type="file" id="coverFile" accept="image/*">
-                <div id="coverPreview"></div>
-            </div>
-            <button class="btn-primary" onclick="uploadTrack()">🚀 Опубликовать трек</button>
-            <div id="uploadError" class="error-message"></div>
-            <div id="uploadSuccess" class="success-message"></div>
-        </div>
+<!-- REGISTER -->
+<div id="regM" class="modal">
+    <div class="mbox">
+        <span class="mclose" onclick="cm('regM')">&times;</span>
+        <h2>✨ Регистрация</h2>
+        <div class="fg"><label>Имя пользователя</label><input id="rUser" placeholder="Введите имя"></div>
+        <div class="fg"><label>Пароль</label><input type="password" id="rPass" placeholder="Введите пароль"></div>
+        <button class="obtn" onclick="register()">Зарегистрироваться</button>
+        <div id="rErr" class="err"></div>
+        <div class="sw" onclick="sm('regM','loginM')">Уже есть аккаунт? Войдите</div>
     </div>
+</div>
 
-    <!-- Song of the Day -->
-    <div id="sotdSection" style="max-width:1200px; margin: 30px auto; padding: 0 20px; display:none;">
-        <h2 class="section-title">☀️ Песни дня</h2>
-        <div id="sotdList" style="display:flex; gap:20px; overflow-x:auto; padding-bottom:15px; scrollbar-width:thin; scrollbar-color:#ff5500 #2d2d44;"></div>
-    </div>
-
-    <div class="tracks-container">
-        <h2 class="section-title">🔥 Популярные треки</h2>
-        <div id="tracksList"></div>
-    </div>
-
-    <div id="player" class="player">
-        <div class="player-content">
-            <img id="playerCover" class="player-cover" src="" alt="">
-            <div class="player-info">
-                <div id="playerTitle" class="player-title"></div>
-                <div id="playerAuthor" style="color: #ccc; font-size: 13px;"></div>
-            </div>
-            <div class="player-controls">
-                <button class="play-btn" onclick="togglePlay()" id="playPauseBtn" style="width: 50px; height: 50px; font-size: 18px;">▶</button>
-                <div class="progress-container">
-                    <span id="currentTime" class="time-display">0:00</span>
-                    <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0">
-                    <span id="duration" class="time-display">0:00</span>
+<!-- PROFILE -->
+<div id="profM" class="modal">
+    <div class="mbox wide">
+        <span class="mclose" onclick="cm('profM')">&times;</span>
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px;flex-wrap:wrap;">
+            <div class="p-av" id="profAv">👤</div>
+            <div>
+                <h2 id="profName" style="margin-bottom:12px;"></h2>
+                <div style="display:flex;gap:22px;">
+                    <div><div class="stn" id="stTracks">0</div><div class="stl">Треки</div></div>
+                    <div><div class="stn" id="stLikes">0</div><div class="stl">Лайки</div></div>
+                    <div><div class="stn" id="stPlays">0</div><div class="stl">Прослушивания</div></div>
                 </div>
-                <div class="volume-container">
-                    <span id="volumeIcon" class="volume-icon" onclick="toggleMute()">🔊</span>
-                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="100">
-                </div>
-                <audio id="audioPlayer"></audio>
             </div>
         </div>
+        <div class="tabs">
+            <button class="tab active" onclick="stab(this,'tTracks')">🎵 Мои треки</button>
+            <button class="tab" onclick="stab(this,'tFavs')">❤️ Лайки</button>
+            <button class="tab" onclick="stab(this,'tSettings')">⚙️ Настройки</button>
+        </div>
+        <div id="tTracks"><div id="myTrList"></div></div>
+        <div id="tFavs" style="display:none;"><div id="myFavList"></div></div>
+        <div id="tSettings" style="display:none;">
+            <div class="fg">
+                <label>Аватарка</label>
+                <label for="avInput" class="flbl">📷 Выбрать фото</label>
+                <input type="file" id="avInput" accept="image/*" onchange="prevAv(event)">
+                <div id="avPrev" style="margin-top:11px;"></div>
+            </div>
+            <div class="fg"><label>Отображаемое имя</label><input id="dnInput" placeholder="Ваше имя"></div>
+            <div class="fg"><label>О себе</label><textarea id="bioInput" placeholder="Расскажите о себе..." style="min-height:85px;resize:vertical;"></textarea></div>
+            <button class="obtn" onclick="saveProfile()">💾 Сохранить</button>
+            <div id="profMsg" class="suc"></div>
+        </div>
     </div>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDt5yps3eRaGD4G58XiHM0anZDG8NgEidQ",
-            authDomain: "my-soundcloud-d1433.firebaseapp.com",
-            databaseURL: "https://my-soundcloud-d1433-default-rtdb.firebaseio.com",
-            projectId: "my-soundcloud-d1433",
-            storageBucket: "my-soundcloud-d1433.firebasestorage.app",
-            messagingSenderId: "441554901767",
-            appId: "1:441554901767:web:f107e1ce7a459650cec3a2"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        let currentUser = null;
-        let currentTrack = null;
-        let tracksListener = null;
-
-        window.onload = async function() {
-            await checkAuth();
-            await loadTracks();
-            startPlaysListener();
-            
-            window.onclick = function(event) {
-                if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-                }
-            }
-        };
-
-        async function checkAuth() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                updateUI();
-            }
-        }
-
-        function updateUI() {
-            if (currentUser) {
-                document.getElementById('navButtons').style.display = 'none';
-                document.getElementById('userInfo').style.display = 'flex';
-                document.getElementById('username').textContent = currentUser;
-            } else {
-                document.getElementById('navButtons').style.display = 'block';
-                document.getElementById('userInfo').style.display = 'none';
-                document.getElementById('uploadSection').style.display = 'none';
-            }
-        }
-
-        function showLogin() {
-            document.getElementById('loginModal').style.display = 'block';
-            document.getElementById('registerModal').style.display = 'none';
-        }
-
-        function showRegister() {
-            document.getElementById('registerModal').style.display = 'block';
-            document.getElementById('loginModal').style.display = 'none';
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        async function register() {
-            const username = document.getElementById('registerUsername').value.trim();
-            const password = document.getElementById('registerPassword').value;
-            const errorDiv = document.getElementById('registerError');
-
-            if (!username || !password) {
-                errorDiv.textContent = 'Заполните все поля';
-                return;
-            }
-
-            try {
-                const userRef = database.ref('users/' + username);
-                const snapshot = await userRef.once('value');
-                
-                if (snapshot.exists()) {
-                    errorDiv.textContent = 'Пользователь уже существует';
-                    return;
-                }
-
-                await userRef.set({ password: password });
-                errorDiv.textContent = '';
-                alert('✅ Регистрация успешна! Войдите в систему.');
-                showLogin();
-            } catch (error) {
-                console.error('Registration error:', error);
-                errorDiv.textContent = 'Ошибка регистрации';
-            }
-        }
-
-        async function login() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const errorDiv = document.getElementById('loginError');
-
-            if (!username || !password) {
-                errorDiv.textContent = 'Заполните все поля';
-                return;
-            }
-
-            try {
-                if (username === 'admin' && password === 'kaka1488') {
-                    currentUser = username;
-                    localStorage.setItem('currentUser', username);
-                    closeModal('loginModal');
-                    updateUI();
-                    await loadTracks();
-                    return;
-                }
-
-                const userRef = database.ref('users/' + username);
-                const snapshot = await userRef.once('value');
-                const userData = snapshot.val();
-                
-                if (!userData || userData.password !== password) {
-                    errorDiv.textContent = 'Неверное имя пользователя или пароль';
-                    return;
-                }
-
-                currentUser = username;
-                localStorage.setItem('currentUser', username);
-                closeModal('loginModal');
-                errorDiv.textContent = '';
-                updateUI();
-                await loadTracks();
-            } catch (error) {
-                console.error('Login error:', error);
-                errorDiv.textContent = 'Ошибка входа';
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            updateUI();
-            loadTracks();
-        }
-
-        function showUpload() {
-            document.getElementById('uploadSection').style.display = 'block';
-            document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function handleAudioSelect(event) {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('audio/')) {
-                document.getElementById('uploadForm').style.display = 'block';
-            }
-        }
-
-        async function uploadTrack() {
-            const title = document.getElementById('trackTitle').value.trim();
-            const audioFile = document.getElementById('audioFile').files[0];
-            const coverFile = document.getElementById('coverFile').files[0];
-            const errorDiv = document.getElementById('uploadError');
-            const successDiv = document.getElementById('uploadSuccess');
-
-            if (!title || !audioFile) {
-                errorDiv.textContent = 'Заполните все обязательные поля';
-                return;
-            }
-
-            // Check file size (Realtime DB limit ~10MB per node)
-            if (audioFile.size > 9 * 1024 * 1024) {
-                errorDiv.textContent = '❌ Файл слишком большой! Максимум 9 МБ. Используйте MP3 файлы меньшего размера.';
-                return;
-            }
-
-            try {
-                errorDiv.textContent = '';
-                successDiv.innerHTML = '⏳ Конвертация аудио... <b id="progressText">0%</b>';
-
-                const trackId = 'track_' + Date.now();
-
-                // Convert audio to base64
-                const audioBase64 = await fileToBase64WithProgress(audioFile, (pct) => {
-                    const el = document.getElementById('progressText');
-                    if (el) el.textContent = pct + '%';
-                });
-
-                successDiv.innerHTML = '🖼️ Обработка обложки...';
-
-                // Convert cover to base64 if exists
-                let coverBase64 = null;
-                if (coverFile) {
-                    if (coverFile.size > 2 * 1024 * 1024) {
-                        coverBase64 = await resizeImage(coverFile, 400, 400);
-                    } else {
-                        coverBase64 = await fileToBase64(coverFile);
-                    }
-                }
-
-                successDiv.innerHTML = '💾 Сохранение в базу данных...';
-
-                // Save everything to Realtime Database
-                await database.ref('tracks/' + trackId).set({
-                    id: trackId,
-                    title: title,
-                    author: currentUser,
-                    audioData: audioBase64,
-                    coverData: coverBase64,
-                    lyrics: document.getElementById('trackLyrics').value.trim(),
-                    timestamp: Date.now()
-                });
-
-                successDiv.textContent = '✅ Трек успешно загружен!';
-
-                document.getElementById('trackTitle').value = '';
-                document.getElementById('trackLyrics').value = '';
-                document.getElementById('audioFile').value = '';
-                document.getElementById('coverFile').value = '';
-                document.getElementById('coverPreview').innerHTML = '';
-                document.getElementById('uploadForm').style.display = 'none';
-
-                setTimeout(() => {
-                    successDiv.textContent = '';
-                    document.getElementById('uploadSection').style.display = 'none';
-                }, 2000);
-            } catch (error) {
-                console.error('Upload error:', error);
-                if (error.message && error.message.includes('13 INTERNAL')) {
-                    errorDiv.innerHTML = '❌ Файл слишком большой для базы данных!<br>Попробуйте MP3 файл меньше 9 МБ.';
-                } else {
-                    errorDiv.textContent = '❌ Ошибка: ' + (error.message || error.code);
-                }
-                successDiv.textContent = '';
-            }
-        }
-
-        function fileToBase64WithProgress(file, onProgress) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onprogress = (e) => {
-                    if (e.lengthComputable) {
-                        onProgress(Math.round((e.loaded / e.total) * 100));
-                    }
-                };
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function resizeImage(file, maxW, maxH) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                const url = URL.createObjectURL(file);
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width, h = img.height;
-                    if (w > maxW) { h = h * maxW / w; w = maxW; }
-                    if (h > maxH) { w = w * maxH / h; h = maxH; }
-                    canvas.width = w;
-                    canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    URL.revokeObjectURL(url);
-                    resolve(canvas.toDataURL('image/jpeg', 0.7));
-                };
-                img.src = url;
-            });
-        }
-
-        async function loadTracks() {
-            const tracksDiv = document.getElementById('tracksList');
-            tracksDiv.innerHTML = '<div class="loading">⏳ Загрузка треков...</div>';
-
-            try {
-                if (tracksListener) {
-                    database.ref('tracks').off('value', tracksListener);
-                }
-
-                const timeout = setTimeout(() => {
-                    tracksDiv.innerHTML = `
-                        <div class="empty-state">
-                            <h3>⚠️ Ошибка подключения к Firebase</h3>
-                            <p style="margin-top:10px;">Откройте <b>Firebase Console → Realtime Database → Правила</b> и установите:<br><br>
-                            <code style="background:#333;color:#ff8800;padding:10px;border-radius:8px;display:inline-block;margin-top:8px;">{ "rules": { ".read": true, ".write": true } }</code><br><br>
-                            После этого обновите страницу.</p>
-                        </div>`;
-                }, 8000);
-
-                tracksListener = database.ref('tracks').on('value', async (snapshot) => {
-                    clearTimeout(timeout);
-                    const tracksData = snapshot.val();
-
-                    if (!tracksData) {
-                        tracksDiv.innerHTML = `
-                            <div class="empty-state">
-                                <h3>🎵 Пока нет треков</h3>
-                                <p>Станьте первым, кто загрузит музыку!</p>
-                            </div>`;
-                        return;
-                    }
-
-        // Store tracks in memory map for playback
-                    window.tracksCache = {};
-                    Object.values(tracksData).forEach(t => { window.tracksCache[t.id] = t; });
-
-                    // Get likes
-                    const likesSnapshot = await database.ref('likes').once('value');
-                    const likesData = likesSnapshot.val() || {};
-
-                    const likesMap = {};
-                    const userLikes = new Set();
-
-                    Object.values(likesData).forEach(like => {
-                        likesMap[like.trackId] = (likesMap[like.trackId] || 0) + 1;
-                        if (currentUser && like.userId === currentUser) {
-                            userLikes.add(like.trackId);
-                        }
-                    });
-
-                    const tracks = Object.values(tracksData);
-                    tracks.sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0));
-
-                    // Load Songs of the Day (top 5 by likes)
-                    loadSongOfTheDay(tracks, likesMap);
-
-                    tracksDiv.innerHTML = tracks.map(track => {
-                        const likesCount = likesMap[track.id] || 0;
-                        const isLiked = userLikes.has(track.id);
-                        const coverSrc = track.coverData || `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><rect width="140" height="140" fill="%23667eea"/><text x="50%" y="50%" font-size="60" text-anchor="middle" dy=".3em">🎵</text></svg>`;
-
-                        return `
-                        <div class="track-item">
-                            <div style="position: relative; flex-shrink: 0;">
-                                <img class="track-cover" src="${coverSrc}" alt="Cover">
-                                <div class="waveform">
-                                    <div class="wave-bar"></div>
-                                    <div class="wave-bar"></div>
-                                    <div class="wave-bar"></div>
-                                    <div class="wave-bar"></div>
-                                    <div class="wave-bar"></div>
-                                    <div class="wave-bar"></div>
-                                </div>
-                            </div>
-                            <div class="track-info">
-                                <div class="track-title">${track.title}</div>
-                                <div class="track-author">👤 ${track.author}</div>
-                                <div style="display:flex; gap:15px; margin-bottom:10px; font-size:13px; color:#aaa;">
-                                    <span>❤️ <span id="count-${track.id}">${likesCount}</span></span>
-                                    <span>▶ <span id="plays-${track.id}">${track.plays || 0}</span> прослушиваний</span>
-                                </div>
-                                <div class="track-controls">
-                                    <button class="play-btn" id="playcard-${track.id}" onclick="playTrackById('${track.id}')">▶</button>
-                                    ${currentUser
-                                        ? `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${track.id}')" id="like-${track.id}">
-                                            ${isLiked ? '❤️' : '🤍'} <span id="likecount-${track.id}">${likesCount}</span>
-                                           </button>`
-                                        : `<span style="padding: 10px; color:#999;">❤️ ${likesCount}</span>`
-                                    }
-                                    ${track.lyrics ? `<button onclick="showLyrics('${track.id}')" style="background:transparent;border:2px solid #667eea;color:#667eea;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;transition:all 0.3s;" onmouseover="this.style.background='#667eea';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#667eea'">📝 Текст</button>` : ''}
-                                    ${currentUser === track.author || currentUser === 'admin'
-                                        ? `<button class="delete-btn" onclick="deleteTrack('${track.id}')">🗑️ Удалить</button>`
-                                        : ''
-                                    }
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('');
-
-                }, (error) => {
-                    clearTimeout(timeout);
-                    tracksDiv.innerHTML = `
-                        <div class="empty-state">
-                            <h3>⚠️ Нет доступа к базе данных</h3>
-                            <p style="margin-top:10px;">Настройте правила Realtime Database:<br><br>
-                            <code style="background:#333;color:#ff8800;padding:10px;border-radius:8px;display:inline-block;margin-top:8px;">{ "rules": { ".read": true, ".write": true } }</code></p>
-                        </div>`;
-                });
-            } catch (error) {
-                console.error('Error loading tracks:', error);
-                tracksDiv.innerHTML = '<div class="error-message">❌ Ошибка загрузки треков</div>';
-            }
-        }
-
-        function loadSongOfTheDay(tracks, likesMap) {
-            const section = document.getElementById('sotdSection');
-            const list = document.getElementById('sotdList');
-
-            if (!tracks || tracks.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-
-            // Top 5 by likes, if tied — by newest
-            const today = new Date();
-            const todayStr = today.toDateString();
-
-            // Prefer tracks uploaded today, otherwise top by likes
-            const todayTracks = tracks.filter(t => new Date(t.timestamp).toDateString() === todayStr);
-            const topTracks = todayTracks.length >= 3 ? todayTracks : tracks;
-            const top5 = [...topTracks]
-                .sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0))
-                .slice(0, 5);
-
-            section.style.display = 'block';
-
-            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-
-            list.innerHTML = top5.map((track, i) => {
-                const likes = likesMap[track.id] || 0;
-                const coverSrc = track.coverData || `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><defs><linearGradient id="g" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23667eea"/><stop offset="100%25" style="stop-color:%23764ba2"/></linearGradient></defs><rect width="200" height="200" fill="url(%23g)"/><text x="50%25" y="50%25" font-size="80" text-anchor="middle" dy=".3em">🎵</text></svg>`;
-
-                return `
-                <div class="sotd-card" onclick="playTrackById('${track.id}')">
-                    <div class="sotd-badge">${medals[i]} №${i + 1}</div>
-                    <img class="sotd-cover" src="${coverSrc}" alt="${track.title}">
-                    <div class="sotd-info">
-                        <div class="sotd-title">${track.title}</div>
-                        <div class="sotd-author">👤 ${track.author}</div>
-                        <button class="sotd-play" onclick="event.stopPropagation(); playTrackById('${track.id}')">▶ Слушать</button>
-                        <div class="sotd-likes">❤️ ${likes} лайков &nbsp;·&nbsp; ▶ ${track.plays || 0} прослушиваний</div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function playTrackById(trackId) {
-            const track = window.tracksCache && window.tracksCache[trackId];
-            if (!track) return;
-
-            const audioPlayer = document.getElementById('audioPlayer');
-
-            // If same track is playing — toggle pause/play
-            if (currentTrack && currentTrack.id === trackId) {
-                if (audioPlayer.paused) {
-                    audioPlayer.play();
-                    document.getElementById('playPauseBtn').textContent = '⏸';
-                    setTrackCardState(trackId, true);
-                } else {
-                    audioPlayer.pause();
-                    document.getElementById('playPauseBtn').textContent = '▶';
-                    setTrackCardState(trackId, false);
-                }
-                return;
-            }
-
-            // New track — reset previous card
-            if (currentTrack) {
-                setTrackCardState(currentTrack.id, false);
-            }
-
-            playTrack(track);
-        }
-
-        function setTrackCardState(trackId, isPlaying) {
-            const btn = document.getElementById('playcard-' + trackId);
-            if (!btn) return;
-            const card = btn.closest('.track-item');
-            if (isPlaying) {
-                btn.innerHTML = '⏸';
-                btn.style.background = 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)';
-                if (card) {
-                    card.style.border = '2px solid #ff5500';
-                    card.style.animation = 'playingPulse 2s infinite';
-                }
-            } else {
-                btn.innerHTML = '▶';
-                btn.style.background = 'linear-gradient(135deg, #ff5500 0%, #ff8800 100%)';
-                if (card) {
-                    card.style.border = '';
-                    card.style.animation = 'fadeIn 0.5s ease';
-                }
-            }
-        }
-
-        async function toggleLike(trackId) {
-            if (!currentUser) {
-                alert('Войдите, чтобы ставить лайки!');
-                return;
-            }
-
-            try {
-                const likeId = currentUser + '_' + trackId;
-                const likeRef = database.ref('likes/' + likeId);
-                const snapshot = await likeRef.once('value');
-
-                const btn = document.getElementById('like-' + trackId);
-                const countEl = document.getElementById('count-' + trackId);
-
-                if (snapshot.exists()) {
-                    // Remove like
-                    await likeRef.remove();
-                    if (btn) {
-                        btn.classList.remove('liked');
-                        btn.innerHTML = `🤍 <span id="count-${trackId}">${Math.max(0, parseInt(countEl ? countEl.textContent : 0) - 1)}</span>`;
-                    }
-                } else {
-                    // Add like
-                    await likeRef.set({
-                        userId: currentUser,
-                        trackId: trackId,
-                        timestamp: Date.now()
-                    });
-                    if (btn) {
-                        btn.classList.add('liked');
-                        btn.innerHTML = `❤️ <span id="count-${trackId}">${parseInt(countEl ? countEl.textContent : 0) + 1}</span>`;
-                    }
-                }
-            } catch (error) {
-                console.error('Error toggling like:', error);
-                alert('Ошибка: ' + error.message);
-            }
-        }
-
-        function showLyrics(trackId) {
-            const track = window.tracksCache && window.tracksCache[trackId];
-            if (!track || !track.lyrics) return;
-
-            document.getElementById('lyricsTitleModal').textContent = '📝 ' + track.title;
-            document.getElementById('lyricsAuthorModal').textContent = '👤 ' + track.author;
-            document.getElementById('lyricsText').textContent = track.lyrics;
-            document.getElementById('lyricsModal').style.display = 'block';
-        }
-
-        async function showSaved() {
-            document.getElementById('savedModal').style.display = 'block';
-            const savedList = document.getElementById('savedList');
-            savedList.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Загрузка...</div>';
-
-            try {
-                // Get user likes
-                const likesSnapshot = await database.ref('likes').once('value');
-                const likesData = likesSnapshot.val() || {};
-                const likedTrackIds = Object.values(likesData)
-                    .filter(l => l.userId === currentUser)
-                    .map(l => l.trackId);
-
-                if (likedTrackIds.length === 0) {
-                    savedList.innerHTML = `
-                        <div style="text-align:center;padding:40px;color:#999;">
-                            <p style="font-size:40px;">🤍</p>
-                            <p style="margin-top:10px;">Вы ещё не лайкнули ни одного трека</p>
-                        </div>`;
-                    return;
-                }
-
-                // Get tracks from cache
-                const tracks = likedTrackIds
-                    .map(id => window.tracksCache && window.tracksCache[id])
-                    .filter(Boolean);
-
-                if (tracks.length === 0) {
-                    savedList.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Треки не найдены</p>';
-                    return;
-                }
-
-                savedList.innerHTML = tracks.map(track => {
-                    const coverSrc = track.coverData || `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23667eea"/><text x="50%" y="50%" font-size="28" text-anchor="middle" dy=".3em">🎵</text></svg>`;
-                    return `
-                    <div style="display:flex;align-items:center;gap:15px;padding:15px;background:#f8f8f8;border-radius:12px;margin-bottom:10px;cursor:pointer;transition:all 0.2s;" 
-                         onmouseover="this.style.background='#fff0ea'" 
-                         onmouseout="this.style.background='#f8f8f8'">
-                        <img src="${coverSrc}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;">
-                        <div style="flex:1;">
-                            <div style="font-weight:bold;color:#333;font-size:16px;">${track.title}</div>
-                            <div style="color:#999;font-size:13px;">👤 ${track.author}</div>
-                        </div>
-                        <button onclick="playTrackById('${track.id}'); closeModal('savedModal')" 
-                                style="width:45px;height:45px;background:linear-gradient(135deg,#ff5500,#ff8800);border:none;border-radius:50%;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">▶</button>
-                        <button onclick="toggleLike('${track.id}'); this.parentElement.style.opacity='0.5'; setTimeout(()=>showSaved(),500)"
-                                style="padding:8px 14px;background:transparent;border:2px solid #ff5500;color:#ff5500;border-radius:20px;cursor:pointer;font-size:13px;flex-shrink:0;">🗑️ Убрать</button>
-                    </div>`;
-                }).join('');
-
-            } catch (error) {
-                savedList.innerHTML = '<p style="color:red;text-align:center;">Ошибка загрузки</p>';
-                console.error(error);
-            }
-        }
-
-        function playTrack(track) {
-            const player = document.getElementById('player');
-            const audioPlayer = document.getElementById('audioPlayer');
-
-            currentTrack = track;
-            audioPlayer.src = track.audioData || track.audioURL;
-            document.getElementById('playerCover').src = track.coverData || track.coverURL || '';
-            document.getElementById('playerTitle').textContent = track.title;
-            document.getElementById('playerAuthor').textContent = track.author;
-
-            player.style.display = 'block';
-            audioPlayer.play();
-            document.getElementById('playPauseBtn').textContent = '⏸';
-
-            // Increment plays counter in Firebase
-            const playsRef = database.ref('tracks/' + track.id + '/plays');
-            playsRef.transaction(current => (current || 0) + 1);
-
-            // Highlight card
-            setTrackCardState(track.id, true);
-
-            // When track ends — reset card
-            audioPlayer.onended = () => {
-                document.getElementById('playPauseBtn').textContent = '▶';
-                setTrackCardState(track.id, false);
-            };
-
-            setupAudioListeners();
-        }
-
-        // Real-time plays listener — updates counter live on all devices
-        function startPlaysListener() {
-            database.ref('tracks').on('child_changed', (snapshot) => {
-                const track = snapshot.val();
-                if (!track || !track.id) return;
-
-                const playsEl = document.getElementById('plays-' + track.id);
-                if (playsEl) {
-                    const newPlays = track.plays || 0;
-                    const oldPlays = parseInt(playsEl.textContent);
-                    if (newPlays !== oldPlays) {
-                        playsEl.textContent = newPlays;
-                        // Flash animation
-                        playsEl.style.color = '#ff5500';
-                        playsEl.style.fontWeight = 'bold';
-                        setTimeout(() => {
-                            playsEl.style.color = '';
-                            playsEl.style.fontWeight = '';
-                        }, 1000);
-                    }
-                }
-
-                // Also update tracksCache
-                if (window.tracksCache && window.tracksCache[track.id]) {
-                    window.tracksCache[track.id].plays = track.plays || 0;
-                }
-            });
-        }
-
-        function togglePlay() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            const btn = document.getElementById('playPauseBtn');
-
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                btn.textContent = '⏸';
-                if (currentTrack) setTrackCardState(currentTrack.id, true);
-            } else {
-                audioPlayer.pause();
-                btn.textContent = '▶';
-                if (currentTrack) setTrackCardState(currentTrack.id, false);
-            }
-        }
-
-        function setupAudioListeners() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            const seekSlider = document.getElementById('seekSlider');
-            const volumeSlider = document.getElementById('volumeSlider');
-
-            audioPlayer.removeEventListener('timeupdate', updateProgress);
-            audioPlayer.addEventListener('timeupdate', updateProgress);
-
-            audioPlayer.addEventListener('loadedmetadata', function() {
-                document.getElementById('duration').textContent = formatTime(audioPlayer.duration);
-            });
-
-            seekSlider.removeEventListener('input', handleSeek);
-            seekSlider.addEventListener('input', handleSeek);
-
-            volumeSlider.removeEventListener('input', handleVolume);
-            volumeSlider.addEventListener('input', handleVolume);
-        }
-
-        function handleSeek() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            const seekSlider = document.getElementById('seekSlider');
-            audioPlayer.currentTime = (audioPlayer.duration * seekSlider.value) / 100;
-        }
-
-        function handleVolume() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            audioPlayer.volume = document.getElementById('volumeSlider').value / 100;
-            updateVolumeIcon();
-        }
-
-        function updateProgress() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            if (audioPlayer.duration) {
-                document.getElementById('seekSlider').value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                document.getElementById('currentTime').textContent = formatTime(audioPlayer.currentTime);
-            }
-        }
-
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function toggleMute() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            const volumeSlider = document.getElementById('volumeSlider');
-            
-            if (audioPlayer.volume > 0) {
-                audioPlayer.dataset.previousVolume = audioPlayer.volume;
-                audioPlayer.volume = 0;
-                volumeSlider.value = 0;
-            } else {
-                const prevVolume = audioPlayer.dataset.previousVolume || 1;
-                audioPlayer.volume = prevVolume;
-                volumeSlider.value = prevVolume * 100;
-            }
-            updateVolumeIcon();
-        }
-
-        function updateVolumeIcon() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            const volumeIcon = document.getElementById('volumeIcon');
-            
-            if (audioPlayer.volume === 0) {
-                volumeIcon.textContent = '🔇';
-            } else if (audioPlayer.volume < 0.5) {
-                volumeIcon.textContent = '🔉';
-            } else {
-                volumeIcon.textContent = '🔊';
-            }
-        }
-
-        async function deleteTrack(trackId) {
-            if (!confirm('Вы уверены, что хотите удалить этот трек?')) {
-                return;
-            }
-
-            try {
-                await database.ref('tracks/' + trackId).remove();
-                
-                // Delete associated likes
-                const likesSnapshot = await database.ref('likes').once('value');
-                const likesData = likesSnapshot.val() || {};
-                for (const [likeId, like] of Object.entries(likesData)) {
-                    if (like.trackId === trackId) {
-                        await database.ref('likes/' + likeId).remove();
-                    }
-                }
-                
-                if (currentTrack && currentTrack.id === trackId) {
-                    document.getElementById('player').style.display = 'none';
-                    document.getElementById('audioPlayer').pause();
-                    currentTrack = null;
-                }
-            } catch (error) {
-                console.error('Error deleting track:', error);
-                alert('Ошибка удаления трека');
-            }
-        }
-
-        document.getElementById('coverFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('coverPreview').innerHTML = 
-                        `<img src="${event.target.result}" style="width: 200px; height: 200px; object-fit: cover; margin-top: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">`;
-                };
-                reader.readAsDataURL(file);
-            }
+</div>
+
+<!-- SAVED -->
+<div id="savedM" class="modal">
+    <div class="mbox wide">
+        <span class="mclose" onclick="cm('savedM')">&times;</span>
+        <h2>❤️ Сохранённые треки</h2>
+        <p style="color:#aaa;font-size:13px;margin-bottom:16px;">Треки идут по порядку как вы их лайкнули — нажмите ▶ для воспроизведения по очереди</p>
+        <div id="savedList"></div>
+    </div>
+</div>
+
+<!-- LYRICS -->
+<div id="lyrM" class="modal">
+    <div class="mbox wide">
+        <span class="mclose" onclick="cm('lyrM')">&times;</span>
+        <h2 id="lyrTitle"></h2>
+        <p id="lyrAuthor" style="color:#aaa;margin-bottom:16px;font-size:13px;"></p>
+        <div id="lyrText" style="white-space:pre-wrap;line-height:1.9;font-size:15px;color:#333;background:#f8f8f8;padding:20px;border-radius:12px;max-height:60vh;overflow-y:auto;"></div>
+    </div>
+</div>
+
+<!-- ADMIN COVER -->
+<div id="aCoverM" class="modal">
+    <div class="mbox">
+        <span class="mclose" onclick="cm('aCoverM')">&times;</span>
+        <h2>🛡️ Изменить обложку</h2>
+        <input type="hidden" id="aCoverTid">
+        <div class="fg">
+            <label>Новая обложка</label>
+            <label for="aCoverFile" class="flbl">📷 Выбрать</label>
+            <input type="file" id="aCoverFile" accept="image/*">
+            <div id="aCoverPrev" style="margin-top:11px;"></div>
+        </div>
+        <button class="obtn" onclick="adminSaveCover()">💾 Сохранить</button>
+        <div id="aCoverMsg" class="suc"></div>
+    </div>
+</div>
+
+<!-- UPLOAD -->
+<div id="uploadSec" class="upload-section">
+    <h2 style="margin-bottom:18px;color:#333;">📤 Загрузить трек</h2>
+    <div class="upload-area" onclick="document.getElementById('audFile').click()">
+        <p style="font-size:20px;margin-bottom:10px;">🎵 Нажмите чтобы выбрать аудио</p>
+        <p style="color:#aaa;font-size:14px;">MP3, WAV, OGG — максимум 9 МБ</p>
+    </div>
+    <input type="file" id="audFile" accept="audio/*" onchange="audSel(event)">
+    <div id="upForm" class="upload-form">
+        <div class="fg"><label>Название трека *</label><input id="trTitle" placeholder="Введите название"></div>
+        <div class="fg"><label>Текст песни</label><textarea id="trLyrics" placeholder="Вставьте текст..." style="min-height:120px;resize:vertical;"></textarea></div>
+        <div class="fg">
+            <label>Обложка</label>
+            <label for="covFile" class="flbl">📷 Выбрать изображение</label>
+            <input type="file" id="covFile" accept="image/*">
+            <div id="covPrev" style="margin-top:11px;"></div>
+        </div>
+        <button class="obtn" onclick="uploadTrack()">🚀 Опубликовать</button>
+        <div id="upErr" class="err"></div>
+        <div id="upSuc" class="suc"></div>
+    </div>
+</div>
+
+<!-- SONGS OF DAY -->
+<div class="sotd-section" id="sotdSec">
+    <h2 class="sec-title">☀️ Песни дня</h2>
+    <div class="sotd-list" id="sotdList"></div>
+</div>
+
+<!-- TRACKS -->
+<div class="tracks-container">
+    <h2 class="sec-title">🔥 Популярные треки</h2>
+    <div id="tracksList"></div>
+</div>
+
+<!-- PLAYER -->
+<div class="player" id="player">
+    <div class="player-inner">
+        <img id="plCover" class="pl-cover" src="" alt="">
+        <div class="pl-info">
+            <div id="plTitle" class="pl-title"></div>
+            <div id="plAuthor" class="pl-author"></div>
+        </div>
+        <div class="pl-ctrl">
+            <button class="pbtn" id="ppBtn" onclick="togglePlay()">▶</button>
+            <div class="pw">
+                <span id="curT" class="t">0:00</span>
+                <input type="range" id="seekEl" class="seek" min="0" max="100" value="0">
+                <span id="durT" class="t">0:00</span>
+            </div>
+            <div class="vw">
+                <span class="vic" id="vicEl" onclick="toggleMute()">🔊</span>
+                <input type="range" id="volEl" class="vslider" min="0" max="100" value="100">
+            </div>
+        </div>
+        <audio id="audEl"></audio>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+    apiKey:"AIzaSyDt5yps3eRaGD4G58XiHM0anZDG8NgEidQ",
+    authDomain:"my-soundcloud-d1433.firebaseapp.com",
+    databaseURL:"https://my-soundcloud-d1433-default-rtdb.firebaseio.com",
+    projectId:"my-soundcloud-d1433",
+    storageBucket:"my-soundcloud-d1433.firebasestorage.app",
+    messagingSenderId:"441554901767",
+    appId:"1:441554901767:web:f107e1ce7a459650cec3a2"
+});
+const db = firebase.database();
+
+let CU = null, curTrack = null, tCache = {}, tListener = null, savedQueue = [];
+
+// ── INIT ──────────────────────────────────────────────────────
+window.onload = async () => {
+    const s = localStorage.getItem('cu');
+    if (s) { CU = s; await checkBan(); updUI(); }
+    loadTracks();
+    startPlaysRT();
+    document.addEventListener('click', e => { if (e.target.classList.contains('modal')) e.target.style.display='none'; });
+    document.getElementById('seekEl').oninput = () => { const a=g('audEl'); a.currentTime=(a.duration*g('seekEl').value)/100; };
+    document.getElementById('volEl').oninput = () => { g('audEl').volume=g('volEl').value/100; updVic(); };
+    document.getElementById('aCoverFile').onchange = e => { const f=e.target.files[0]; if(f){b64(f).then(d=>{ g('aCoverPrev').innerHTML=`<img src="${d}" style="width:110px;height:110px;object-fit:cover;border-radius:9px;">`; });} };
+    document.getElementById('covFile').onchange = e => { const f=e.target.files[0]; if(f){b64(f).then(d=>{ g('covPrev').innerHTML=`<img src="${d}" style="width:170px;height:170px;object-fit:cover;border-radius:11px;box-shadow:0 4px 10px rgba(0,0,0,0.2);">`; });} };
+};
+
+async function checkBan() {
+    if (!CU || CU==='admin') return;
+    const s = await db.ref('users/'+CU+'/banned').once('value');
+    if (s.val()===true) { g('bannedScreen').classList.add('show'); CU=null; localStorage.removeItem('cu'); }
+}
+
+function updUI() {
+    if (CU) {
+        g('navBtns').style.display='none'; g('userUI').style.display='flex';
+        g('hdrName').textContent=CU;
+        db.ref('users/'+CU+'/avatar').once('value').then(s => {
+            const av=g('hdrAv');
+            if(s.val()) av.innerHTML=`<img src="${s.val()}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            else av.textContent='👤';
         });
-    </script>
+    } else {
+        g('navBtns').style.display='flex'; g('userUI').style.display='none';
+    }
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────
+const om=id=>g(id).style.display='block';
+const cm=id=>g(id).style.display='none';
+const sm=(a,b)=>{cm(a);om(b);};
+const g=id=>document.getElementById(id);
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function register() {
+    const u=g('rUser').value.trim(), p=g('rPass').value;
+    if (!u||!p){g('rErr').textContent='Заполните все поля';return;}
+    const s=await db.ref('users/'+u).once('value');
+    if (s.exists()){g('rErr').textContent='Пользователь уже существует';return;}
+    await db.ref('users/'+u).set({password:p,banned:false});
+    g('rErr').textContent='';
+    alert('✅ Регистрация успешна!');
+    sm('regM','loginM');
+}
+
+async function login() {
+    const u=g('lUser').value.trim(), p=g('lPass').value;
+    if (!u||!p){g('lErr').textContent='Заполните все поля';return;}
+    if (u==='admin'&&p==='kaka1488') { CU='admin'; localStorage.setItem('cu','admin'); cm('loginM'); updUI(); loadTracks(); return; }
+    const s=await db.ref('users/'+u).once('value'), d=s.val();
+    if (!d||d.password!==p){g('lErr').textContent='Неверные данные';return;}
+    if (d.banned){g('lErr').textContent='🚫 Аккаунт заблокирован';return;}
+    CU=u; localStorage.setItem('cu',u); cm('loginM'); g('lErr').textContent=''; updUI(); loadTracks();
+}
+
+function logout() { CU=null; localStorage.removeItem('cu'); updUI(); loadTracks(); }
+
+// ── PROFILE ───────────────────────────────────────────────────
+async function openProfile() {
+    om('profM');
+    g('profName').textContent=CU;
+    ['tTracks','tFavs','tSettings'].forEach(id=>g(id).style.display=id==='tTracks'?'block':'none');
+    document.querySelectorAll('#profM .tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+    const snap=await db.ref('users/'+CU).once('value'), d=snap.val()||{};
+    const pav=g('profAv');
+    if(d.avatar) pav.innerHTML=`<img src="${d.avatar}">`;
+    else pav.textContent='👤';
+    g('dnInput').value=d.displayName||'';
+    g('bioInput').value=d.bio||'';
+
+    const mine=Object.values(tCache).filter(t=>t.author===CU);
+    g('stTracks').textContent=mine.length;
+    const ls=await db.ref('likes').once('value');
+    const allLk=ls.val()||{};
+    let totLk=0, totPl=0;
+    mine.forEach(t=>{ totPl+=t.plays||0; Object.values(allLk).forEach(l=>{if(l.trackId===t.id)totLk++;}); });
+    g('stLikes').textContent=totLk;
+    g('stPlays').textContent=totPl;
+
+    const lkMap={};
+    Object.values(allLk).forEach(l=>{ lkMap[l.trackId]=(lkMap[l.trackId]||0)+1; });
+    const list=g('myTrList');
+    if(!mine.length){list.innerHTML='<p style="text-align:center;color:#aaa;padding:28px;">Вы ещё не загрузили треков</p>';return;}
+    mine.sort((a,b)=>b.timestamp-a.timestamp);
+    list.innerHTML=mine.map(t=>`<div class="qi">
+        <img class="qcover" src="${t.coverData||dcov(52)}" alt="">
+        <div class="qinfo">
+            <div class="qtitle">${t.title}</div>
+            <div class="qmeta">❤️ <b style="color:#ff5500">${lkMap[t.id]||0}</b> лайков · ▶ ${t.plays||0} прослушиваний</div>
+        </div>
+        <button class="qplay" onclick="playById('${t.id}');cm('profM')">▶</button>
+        <button onclick="delTrack('${t.id}')" style="background:transparent;border:2px solid #dc3545;color:#dc3545;padding:6px 11px;border-radius:18px;cursor:pointer;font-size:11px;transition:all 0.3s;flex-shrink:0;" onmouseover="this.style.background='#dc3545';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#dc3545'">🗑️</button>
+    </div>`).join('');
+}
+
+async function renderMyLikes() {
+    const list=g('myFavList');
+    list.innerHTML='<div style="text-align:center;padding:20px;color:#aaa;">⏳ Загрузка...</div>';
+    const ls=await db.ref('likes').once('value');
+    const allLk=ls.val()||{};
+    // Likes received on MY tracks
+    const mine=Object.values(tCache).filter(t=>t.author===CU);
+    const lkMap={};
+    Object.values(allLk).forEach(l=>{ lkMap[l.trackId]=(lkMap[l.trackId]||0)+1; });
+    const sorted=[...mine].sort((a,b)=>(lkMap[b.id]||0)-(lkMap[a.id]||0));
+    if(!sorted.length){list.innerHTML='<p style="text-align:center;color:#aaa;padding:28px;">Нет треков</p>';return;}
+    const total=sorted.reduce((s,t)=>s+(lkMap[t.id]||0),0);
+    list.innerHTML=`<div style="text-align:center;padding:14px 0 18px;font-size:14px;color:#aaa;">Всего лайков на ваших треках: <b style="color:#ff5500;font-size:20px;">${total}</b></div>`
+    +sorted.map((t,i)=>{
+        const lk=lkMap[t.id]||0;
+        const bar=total>0?Math.round(lk/total*100):0;
+        const medals=['🥇','🥈','🥉'];
+        return `<div class="qi" style="flex-direction:column;align-items:stretch;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:18px;min-width:26px;">${medals[i]||'🎵'}</span>
+                <img class="qcover" src="${t.coverData||dcov(48)}" alt="">
+                <div style="flex:1;min-width:0;">
+                    <div class="qtitle">${t.title}</div>
+                    <div class="qmeta">❤️ <b style="color:#ff5500">${lk}</b> лайков · ▶ ${t.plays||0} прослушиваний</div>
+                </div>
+            </div>
+            <div style="background:#f0f0f0;border-radius:8px;height:8px;overflow:hidden;">
+                <div style="width:${bar}%;height:100%;background:linear-gradient(135deg,#ff5500,#ff8800);border-radius:8px;transition:width 0.8s ease;"></div>
+            </div>
+        </div>`;
+    }).join('')+`<div style="text-align:center;margin-top:16px;"><button onclick="openSaved()" class="obtn" style="padding:10px 24px;font-size:13px;">❤️ Мои сохранённые треки</button></div>`
+;
+}
+
+function stab(btn,tabId) {
+    document.querySelectorAll('#profM .tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    ['tTracks','tFavs','tSettings'].forEach(id=>g(id).style.display=id===tabId?'block':'none');
+    if(tabId==='tFavs') renderMyLikes();
+}
+
+function prevAv(e) {
+    const f=e.target.files[0]; if(!f) return;
+    b64(f).then(d=>{ g('avPrev').innerHTML=`<img src="${d}" style="width:95px;height:95px;object-fit:cover;border-radius:50%;border:3px solid #ff5500;">`; });
+}
+
+async function saveProfile() {
+    const f=g('avInput').files[0];
+    let av=null;
+    if(f) av=f.size>2*1024*1024?await rszImg(f,300,300):await b64(f);
+    else { const s=await db.ref('users/'+CU+'/avatar').once('value'); av=s.val(); }
+    await db.ref('users/'+CU).update({ displayName:g('dnInput').value, bio:g('bioInput').value, avatar:av });
+    if(av){ g('hdrAv').innerHTML=`<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; g('profAv').innerHTML=`<img src="${av}">`; }
+    g('profMsg').textContent='✅ Профиль сохранён!';
+    setTimeout(()=>g('profMsg').textContent='',3000);
+}
+
+// ── UPLOAD ────────────────────────────────────────────────────
+function showUpload() { g('uploadSec').style.display='block'; g('uploadSec').scrollIntoView({behavior:'smooth'}); }
+function audSel(e) { if(e.target.files[0]) g('upForm').style.display='block'; }
+
+async function uploadTrack() {
+    const title=g('trTitle').value.trim(), af=g('audFile').files[0], cf=g('covFile').files[0];
+    if(!title||!af){g('upErr').textContent='Укажите название и аудио';return;}
+    if(af.size>9*1024*1024){g('upErr').textContent='❌ Файл больше 9 МБ';return;}
+    g('upErr').textContent=''; g('upSuc').innerHTML='⏳ Конвертация... <b id="upPct">0%</b>';
+    try {
+        const ad=await b64prog(af,p=>{const e=g('upPct');if(e)e.textContent=p+'%';});
+        g('upSuc').innerHTML='🖼️ Обработка обложки...';
+        let cd=null;
+        if(cf) cd=cf.size>2*1024*1024?await rszImg(cf,400,400):await b64(cf);
+        g('upSuc').innerHTML='💾 Сохранение...';
+        const id='track_'+Date.now();
+        await db.ref('tracks/'+id).set({ id, title, author:CU, audioData:ad, coverData:cd, lyrics:g('trLyrics').value.trim(), timestamp:Date.now(), plays:0 });
+        g('upSuc').textContent='✅ Трек загружен!';
+        ['trTitle','trLyrics'].forEach(x=>g(x).value='');
+        g('audFile').value=''; g('covFile').value=''; g('covPrev').innerHTML=''; g('upForm').style.display='none';
+        setTimeout(()=>{ g('upSuc').textContent=''; g('uploadSec').style.display='none'; },2000);
+    } catch(e) { g('upErr').textContent='❌ '+e.message; g('upSuc').textContent=''; }
+}
+
+// ── LOAD TRACKS ───────────────────────────────────────────────
+async function loadTracks() {
+    const div=g('tracksList');
+    div.innerHTML='<div class="loading">⏳ Загрузка треков...</div>';
+    if(tListener) db.ref('tracks').off('value',tListener);
+
+    const to=setTimeout(()=>{ div.innerHTML=`<div class="empty"><h3>⚠️ Ошибка подключения</h3><p style="margin-top:12px;">Firebase Console → Database → Правила → { ".read":true, ".write":true }</p></div>`; },8000);
+
+    tListener=db.ref('tracks').on('value', async snap=>{
+        clearTimeout(to);
+        const data=snap.val();
+        if(!data){ div.innerHTML='<div class="empty"><h3>🎵 Пока нет треков</h3><p>Загрузите первый!</p></div>'; g('sotdSec').style.display='none'; return; }
+        tCache={};
+        Object.values(data).forEach(t=>tCache[t.id]=t);
+        const ls=await db.ref('likes').once('value'), allLk=ls.val()||{};
+        const lkMap={}, ulikes=new Set();
+        Object.values(allLk).forEach(l=>{ lkMap[l.trackId]=(lkMap[l.trackId]||0)+1; if(CU&&l.userId===CU) ulikes.add(l.trackId); });
+        const tracks=Object.values(data).sort((a,b)=>(lkMap[b.id]||0)-(lkMap[a.id]||0));
+        renderSotd(tracks,lkMap);
+        renderTracks(tracks,lkMap,ulikes);
+    }, ()=>{ div.innerHTML='<div class="empty"><h3>⚠️ Нет доступа</h3><p>Настройте правила Firebase</p></div>'; });
+}
+
+function renderTracks(tracks,lkMap,ulikes) {
+    g('tracksList').innerHTML=tracks.map(t=>{
+        const cov=t.coverData||dcov(125);
+        const lk=lkMap[t.id]||0, liked=ulikes.has(t.id);
+        const isOwn=CU&&CU===t.author, isAdm=CU==='admin';
+        return `<div class="track-item">
+            <div style="position:relative;flex-shrink:0;">
+                <img class="tr-cover" src="${cov}" alt="">
+                <div class="waveform">${'<div class="wb"></div>'.repeat(6)}</div>
+            </div>
+            <div class="tr-info">
+                <div class="tr-title">${t.title}</div>
+                <div class="tr-author">👤 ${t.author}</div>
+                <div class="tr-stats">
+                    <span>❤️ <b id="lk-${t.id}">${lk}</b></span>
+                    <span>▶ <b id="pl-${t.id}">${t.plays||0}</b> прослушиваний</span>
+                </div>
+                <div class="tr-ctrl">
+                    <button class="play-btn" id="pcard-${t.id}" onclick="playById('${t.id}')">▶</button>
+                    ${CU&&!isOwn
+                        ?`<button class="like-btn ${liked?'liked':''}" id="lbtn-${t.id}" onclick="toggleLike('${t.id}')">
+                            ${liked?'❤️':'🤍'} <span id="lkc-${t.id}">${lk}</span></button>`
+                        :`<span style="padding:7px;color:#ccc;font-size:13px;">❤️ ${lk}</span>`
+                    }
+                    ${t.lyrics?`<button class="cbtn lyr" onclick="showLyrics('${t.id}')">📝 Текст</button>`:''}
+                    ${isOwn||isAdm?`<button class="cbtn del" onclick="delTrack('${t.id}')">🗑️ Удалить</button>`:''}
+                    ${isAdm?`<button class="cbtn ae" onclick="adminCov('${t.id}')">🖼️ Обложка</button>`:''}
+                    ${isAdm&&t.author!=='admin'?`<button class="cbtn ban" onclick="banUser('${t.author}')">🚫 Бан</button>`:''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderSotd(tracks,lkMap) {
+    const sec=g('sotdSec'), list=g('sotdList');
+    if(!tracks.length){sec.style.display='none';return;}
+    const top5=[...tracks].sort((a,b)=>(lkMap[b.id]||0)-(lkMap[a.id]||0)).slice(0,5);
+    sec.style.display='block';
+    const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
+    list.innerHTML=top5.map((t,i)=>`
+        <div class="sotd-card" onclick="playById('${t.id}')">
+            <div style="position:relative;"><img class="sotd-cover" src="${t.coverData||dcov(185)}" alt=""><div class="sotd-badge">${medals[i]} №${i+1}</div></div>
+            <div class="sotd-info">
+                <div class="sotd-title">${t.title}</div>
+                <div style="color:#aaa;font-size:11px;">👤 ${t.author}</div>
+                <button onclick="event.stopPropagation();playById('${t.id}')" style="width:100%;margin-top:9px;padding:8px;background:linear-gradient(135deg,#ff5500,#ff8800);color:white;border:none;border-radius:22px;font-size:13px;font-weight:bold;cursor:pointer;">▶ Слушать</button>
+                <div class="sotd-meta">❤️ ${lkMap[t.id]||0} · ▶ ${t.plays||0}</div>
+            </div>
+        </div>`).join('');
+}
+
+// ── PLAYBACK ──────────────────────────────────────────────────
+function playById(id) {
+    const t=tCache[id]; if(!t) return;
+    const a=g('audEl');
+    if(curTrack&&curTrack.id===id) {
+        if(a.paused){a.play();g('ppBtn').textContent='⏸';setCard(id,true);}
+        else{a.pause();g('ppBtn').textContent='▶';setCard(id,false);}
+        return;
+    }
+    if(curTrack) setCard(curTrack.id,false);
+    curTrack=t;
+    a.src=t.audioData;
+    g('plCover').src=t.coverData||'';
+    g('plTitle').textContent=t.title;
+    g('plAuthor').textContent=t.author;
+    g('player').style.display='block';
+    a.play(); g('ppBtn').textContent='⏸'; setCard(id,true);
+    db.ref('tracks/'+id+'/plays').transaction(v=>(v||0)+1);
+    a.onended=()=>{ g('ppBtn').textContent='▶'; setCard(id,false); autoNext(id); };
+    a.ontimeupdate=()=>{ if(a.duration){ g('seekEl').value=(a.currentTime/a.duration)*100; g('curT').textContent=fmt(a.currentTime); } };
+    a.onloadedmetadata=()=>{ g('durT').textContent=fmt(a.duration); };
+}
+
+function autoNext(curId) {
+    const idx=savedQueue.findIndex(id=>id===curId);
+    if(idx>=0&&idx<savedQueue.length-1) setTimeout(()=>playById(savedQueue[idx+1]),600);
+}
+
+function setCard(id,pl) {
+    const btn=g('pcard-'+id); if(!btn) return;
+    const card=btn.closest('.track-item');
+    btn.textContent=pl?'⏸':'▶';
+    btn.style.background=pl?'linear-gradient(135deg,#764ba2,#667eea)':'linear-gradient(135deg,#ff5500,#ff8800)';
+    if(card){ card.style.border=pl?'2px solid #ff5500':'2px solid transparent'; card.style.animation=pl?'playingPulse 2s infinite':'fadeIn 0.5s'; }
+}
+
+function togglePlay() {
+    const a=g('audEl'),btn=g('ppBtn');
+    if(a.paused){a.play();btn.textContent='⏸';if(curTrack)setCard(curTrack.id,true);}
+    else{a.pause();btn.textContent='▶';if(curTrack)setCard(curTrack.id,false);}
+}
+
+function toggleMute() {
+    const a=g('audEl'),sl=g('volEl');
+    if(a.volume>0){a.dataset.pv=a.volume;a.volume=0;sl.value=0;}
+    else{a.volume=a.dataset.pv||1;sl.value=(a.dataset.pv||1)*100;}
+    updVic();
+}
+function updVic(){const v=g('audEl').volume;g('vicEl').textContent=v===0?'🔇':v<0.5?'🔉':'🔊';}
+
+// ── REAL-TIME PLAYS ───────────────────────────────────────────
+function startPlaysRT() {
+    db.ref('tracks').on('child_changed',snap=>{
+        const t=snap.val(); if(!t) return;
+        tCache[t.id]=t;
+        const el=g('pl-'+t.id);
+        if(el){ el.textContent=t.plays||0; el.style.color='#ff5500'; setTimeout(()=>el.style.color='',800); }
+    });
+}
+
+// ── LIKES ─────────────────────────────────────────────────────
+async function toggleLike(tid) {
+    if(!CU){alert('Войдите, чтобы ставить лайки!');return;}
+    const t=tCache[tid];
+    if(t&&t.author===CU){alert('Нельзя лайкать свои треки!');return;}
+    const lid=CU+'_'+tid, ref=db.ref('likes/'+lid);
+    const snap=await ref.once('value');
+    const btn=g('lbtn-'+tid), cnt=g('lkc-'+tid), lk=g('lk-'+tid);
+    const cur=parseInt(cnt?cnt.textContent:0);
+    if(snap.exists()){
+        await ref.remove();
+        if(btn){btn.classList.remove('liked');btn.innerHTML=`🤍 <span id="lkc-${tid}">${Math.max(0,cur-1)}</span>`;}
+        if(lk)lk.textContent=Math.max(0,cur-1);
+    } else {
+        await ref.set({userId:CU,trackId:tid,timestamp:Date.now()});
+        if(btn){btn.classList.add('liked');btn.innerHTML=`❤️ <span id="lkc-${tid}">${cur+1}</span>`;}
+        if(lk)lk.textContent=cur+1;
+    }
+}
+
+// ── LYRICS ────────────────────────────────────────────────────
+function showLyrics(id){
+    const t=tCache[id]; if(!t||!t.lyrics) return;
+    g('lyrTitle').textContent='📝 '+t.title;
+    g('lyrAuthor').textContent='👤 '+t.author;
+    g('lyrText').textContent=t.lyrics;
+    om('lyrM');
+}
+
+// ── SAVED QUEUE ───────────────────────────────────────────────
+async function openSaved() {
+    om('savedM');
+    const list=g('savedList');
+    list.innerHTML='<div style="text-align:center;padding:20px;color:#aaa;">⏳ Загрузка...</div>';
+    const snap=await db.ref('likes').once('value');
+    const all=snap.val()||{};
+    // Sort by timestamp (order in which user liked them)
+    const myLikes=Object.values(all)
+        .filter(l=>l.userId===CU)
+        .sort((a,b)=>a.timestamp-b.timestamp);
+    savedQueue=myLikes.map(l=>l.trackId);
+    if(!myLikes.length){
+        list.innerHTML='<div style="text-align:center;padding:50px;color:#aaa;"><div style="font-size:48px;">🤍</div><p style="margin-top:12px;">Лайкните треки чтобы добавить их сюда</p></div>';
+        return;
+    }
+    // Count likes per track for display
+    const lkMap={};
+    Object.values(all).forEach(l=>{ lkMap[l.trackId]=(lkMap[l.trackId]||0)+1; });
+
+    list.innerHTML=myLikes.map((l,i)=>{
+        const t=tCache[l.trackId]; if(!t) return '';
+        const added=new Date(l.timestamp).toLocaleDateString('ru-RU');
+        return `<div class="qi" id="sq-${t.id}">
+            <div class="qnum">${i+1}</div>
+            <img class="qcover" src="${t.coverData||dcov(52)}" alt="">
+            <div class="qinfo">
+                <div class="qtitle">${t.title}</div>
+                <div class="qmeta">👤 ${t.author} · ❤️ ${lkMap[t.id]||0} · ▶ ${t.plays||0} · 📅 ${added}</div>
+            </div>
+            <button class="qplay" onclick="playById('${t.id}');cm('savedM')" title="Слушать">▶</button>
+            <button onclick="toggleLike('${t.id}');this.closest('.qi').style.opacity='0.4';setTimeout(openSaved,600)"
+                style="background:transparent;border:2px solid #ff5500;color:#ff5500;padding:6px 11px;border-radius:18px;cursor:pointer;font-size:11px;transition:all 0.3s;flex-shrink:0;"
+                onmouseover="this.style.background='#ff5500';this.style.color='white'"
+                onmouseout="this.style.background='transparent';this.style.color='#ff5500'"
+                title="Убрать из сохранённых">🗑️</button>
+        </div>`;
+    }).join('');
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────
+async function banUser(u) {
+    if(!confirm(`Заблокировать "${u}"?`)) return;
+    await db.ref('users/'+u+'/banned').set(true);
+    alert(`✅ Пользователь "${u}" заблокирован`);
+    loadTracks();
+}
+function adminCov(id){ g('aCoverTid').value=id; g('aCoverPrev').innerHTML=''; g('aCoverMsg').textContent=''; om('aCoverM'); }
+async function adminSaveCover() {
+    const id=g('aCoverTid').value, f=g('aCoverFile').files[0];
+    if(!f){g('aCoverMsg').textContent='Выберите изображение';return;}
+    const cd=f.size>2*1024*1024?await rszImg(f,400,400):await b64(f);
+    await db.ref('tracks/'+id+'/coverData').set(cd);
+    g('aCoverMsg').textContent='✅ Обложка обновлена!';
+    setTimeout(()=>cm('aCoverM'),1500);
+}
+
+// ── DELETE ────────────────────────────────────────────────────
+async function delTrack(id) {
+    if(!confirm('Удалить трек?')) return;
+    await db.ref('tracks/'+id).remove();
+    const s=await db.ref('likes').once('value'), all=s.val()||{};
+    for(const[k,v] of Object.entries(all)) if(v.trackId===id) await db.ref('likes/'+k).remove();
+    if(curTrack&&curTrack.id===id){g('player').style.display='none';g('audEl').pause();curTrack=null;}
+    cm('profM');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+const b64=f=>new Promise((r,j)=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.onerror=j;rd.readAsDataURL(f);});
+const b64prog=(f,onP)=>new Promise((r,j)=>{const rd=new FileReader();rd.onprogress=e=>{if(e.lengthComputable)onP(Math.round(e.loaded/e.total*100));};rd.onload=()=>r(rd.result);rd.onerror=j;rd.readAsDataURL(f);});
+function rszImg(file,mw,mh){return new Promise(r=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{let w=img.width,h=img.height;if(w>mw){h=h*mw/w;w=mw;}if(h>mh){w=w*mh/h;h=mh;}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);r(c.toDataURL('image/jpeg',0.75));};img.src=url;});}
+function fmt(s){if(isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function dcov(sz){return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}"><defs><linearGradient id="g" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" stop-color="%23667eea"/><stop offset="100%25" stop-color="%23764ba2"/></linearGradient></defs><rect width="${sz}" height="${sz}" fill="url(%23g)"/><text x="50%25" y="50%25" font-size="${Math.round(sz*0.42)}" text-anchor="middle" dy=".3em">🎵</text></svg>`;}
+</script>
 </body>
 </html>
