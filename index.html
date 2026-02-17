@@ -571,7 +571,90 @@
         .wave-bar:nth-child(5) { animation-delay: 0.4s; }
         .wave-bar:nth-child(6) { animation-delay: 0.5s; }
 
-        .close-modal {
+        .sotd-card {
+            min-width: 200px;
+            max-width: 200px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: fadeIn 0.5s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sotd-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(255,85,0,0.4);
+        }
+
+        .sotd-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #ff5500, #ff8800);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(255,85,0,0.5);
+        }
+
+        .sotd-cover {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .sotd-info {
+            padding: 15px;
+        }
+
+        .sotd-title {
+            font-weight: bold;
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sotd-author {
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .sotd-play {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #ff5500, #ff8800);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sotd-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255,85,0,0.5);
+        }
+
+        .sotd-likes {
+            color: #ff5500;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+        }
             float: right;
             font-size: 32px;
             font-weight: bold;
@@ -692,6 +775,12 @@
         </div>
     </div>
 
+    <!-- Song of the Day -->
+    <div id="sotdSection" style="max-width:1200px; margin: 30px auto; padding: 0 20px; display:none;">
+        <h2 class="section-title">☀️ Песни дня</h2>
+        <div id="sotdList" style="display:flex; gap:20px; overflow-x:auto; padding-bottom:15px; scrollbar-width:thin; scrollbar-color:#ff5500 #2d2d44;"></div>
+    </div>
+
     <div class="tracks-container">
         <h2 class="section-title">🔥 Популярные треки</h2>
         <div id="tracksList"></div>
@@ -747,6 +836,7 @@
         window.onload = async function() {
             await checkAuth();
             await loadTracks();
+            startPlaysListener();
             
             window.onclick = function(event) {
                 if (event.target.classList.contains('modal')) {
@@ -1031,7 +1121,7 @@
                         return;
                     }
 
-                    // Store tracks in memory map for playback
+        // Store tracks in memory map for playback
                     window.tracksCache = {};
                     Object.values(tracksData).forEach(t => { window.tracksCache[t.id] = t; });
 
@@ -1051,6 +1141,9 @@
 
                     const tracks = Object.values(tracksData);
                     tracks.sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0));
+
+                    // Load Songs of the Day (top 5 by likes)
+                    loadSongOfTheDay(tracks, likesMap);
 
                     tracksDiv.innerHTML = tracks.map(track => {
                         const likesCount = likesMap[track.id] || 0;
@@ -1073,11 +1166,15 @@
                             <div class="track-info">
                                 <div class="track-title">${track.title}</div>
                                 <div class="track-author">👤 ${track.author}</div>
+                                <div style="display:flex; gap:15px; margin-bottom:10px; font-size:13px; color:#aaa;">
+                                    <span>❤️ <span id="count-${track.id}">${likesCount}</span></span>
+                                    <span>▶ <span id="plays-${track.id}">${track.plays || 0}</span> прослушиваний</span>
+                                </div>
                                 <div class="track-controls">
                                     <button class="play-btn" id="playcard-${track.id}" onclick="playTrackById('${track.id}')">▶</button>
                                     ${currentUser
                                         ? `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${track.id}')" id="like-${track.id}">
-                                            ${isLiked ? '❤️' : '🤍'} <span id="count-${track.id}">${likesCount}</span>
+                                            ${isLiked ? '❤️' : '🤍'} <span id="likecount-${track.id}">${likesCount}</span>
                                            </button>`
                                         : `<span style="padding: 10px; color:#999;">❤️ ${likesCount}</span>`
                                     }
@@ -1104,6 +1201,48 @@
                 console.error('Error loading tracks:', error);
                 tracksDiv.innerHTML = '<div class="error-message">❌ Ошибка загрузки треков</div>';
             }
+        }
+
+        function loadSongOfTheDay(tracks, likesMap) {
+            const section = document.getElementById('sotdSection');
+            const list = document.getElementById('sotdList');
+
+            if (!tracks || tracks.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            // Top 5 by likes, if tied — by newest
+            const today = new Date();
+            const todayStr = today.toDateString();
+
+            // Prefer tracks uploaded today, otherwise top by likes
+            const todayTracks = tracks.filter(t => new Date(t.timestamp).toDateString() === todayStr);
+            const topTracks = todayTracks.length >= 3 ? todayTracks : tracks;
+            const top5 = [...topTracks]
+                .sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0))
+                .slice(0, 5);
+
+            section.style.display = 'block';
+
+            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+
+            list.innerHTML = top5.map((track, i) => {
+                const likes = likesMap[track.id] || 0;
+                const coverSrc = track.coverData || `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><defs><linearGradient id="g" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23667eea"/><stop offset="100%25" style="stop-color:%23764ba2"/></linearGradient></defs><rect width="200" height="200" fill="url(%23g)"/><text x="50%25" y="50%25" font-size="80" text-anchor="middle" dy=".3em">🎵</text></svg>`;
+
+                return `
+                <div class="sotd-card" onclick="playTrackById('${track.id}')">
+                    <div class="sotd-badge">${medals[i]} №${i + 1}</div>
+                    <img class="sotd-cover" src="${coverSrc}" alt="${track.title}">
+                    <div class="sotd-info">
+                        <div class="sotd-title">${track.title}</div>
+                        <div class="sotd-author">👤 ${track.author}</div>
+                        <button class="sotd-play" onclick="event.stopPropagation(); playTrackById('${track.id}')">▶ Слушать</button>
+                        <div class="sotd-likes">❤️ ${likes} лайков &nbsp;·&nbsp; ▶ ${track.plays || 0} прослушиваний</div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function playTrackById(trackId) {
@@ -1274,6 +1413,10 @@
             audioPlayer.play();
             document.getElementById('playPauseBtn').textContent = '⏸';
 
+            // Increment plays counter in Firebase
+            const playsRef = database.ref('tracks/' + track.id + '/plays');
+            playsRef.transaction(current => (current || 0) + 1);
+
             // Highlight card
             setTrackCardState(track.id, true);
 
@@ -1284,6 +1427,35 @@
             };
 
             setupAudioListeners();
+        }
+
+        // Real-time plays listener — updates counter live on all devices
+        function startPlaysListener() {
+            database.ref('tracks').on('child_changed', (snapshot) => {
+                const track = snapshot.val();
+                if (!track || !track.id) return;
+
+                const playsEl = document.getElementById('plays-' + track.id);
+                if (playsEl) {
+                    const newPlays = track.plays || 0;
+                    const oldPlays = parseInt(playsEl.textContent);
+                    if (newPlays !== oldPlays) {
+                        playsEl.textContent = newPlays;
+                        // Flash animation
+                        playsEl.style.color = '#ff5500';
+                        playsEl.style.fontWeight = 'bold';
+                        setTimeout(() => {
+                            playsEl.style.color = '';
+                            playsEl.style.fontWeight = '';
+                        }, 1000);
+                    }
+                }
+
+                // Also update tracksCache
+                if (window.tracksCache && window.tracksCache[track.id]) {
+                    window.tracksCache[track.id].plays = track.plays || 0;
+                }
+            });
         }
 
         function togglePlay() {
