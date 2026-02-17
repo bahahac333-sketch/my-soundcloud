@@ -638,6 +638,16 @@
         </div>
     </div>
 
+    <!-- Lyrics Modal -->
+    <div id="lyricsModal" class="modal">
+        <div class="modal-content" style="width:600px; max-width:95%; max-height:80vh; overflow-y:auto;">
+            <span class="close-modal" onclick="closeModal('lyricsModal')">&times;</span>
+            <h2 id="lyricsTitleModal" style="margin-bottom:5px;"></h2>
+            <p id="lyricsAuthorModal" style="color:#999; margin-bottom:20px; font-size:14px;"></p>
+            <div id="lyricsText" style="white-space:pre-wrap; line-height:1.8; font-size:15px; color:#333; background:#f8f8f8; padding:20px; border-radius:12px;"></div>
+        </div>
+    </div>
+
     <!-- Saved Tracks Modal -->
     <div id="savedModal" class="modal">
         <div class="modal-content" style="width: 700px; max-width: 95%; max-height: 80vh; overflow-y: auto;">
@@ -660,6 +670,10 @@
             <div class="form-group">
                 <label>Название трека</label>
                 <input type="text" id="trackTitle" placeholder="Введите название">
+            </div>
+            <div class="form-group">
+                <label>Текст песни (необязательно)</label>
+                <textarea id="trackLyrics" placeholder="Вставьте текст песни сюда..." style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; min-height:150px; resize:vertical; font-family:inherit; transition:all 0.3s ease;"></textarea>
             </div>
             <div class="form-group">
                 <label>Обложка трека (необязательно)</label>
@@ -910,12 +924,14 @@
                     author: currentUser,
                     audioData: audioBase64,
                     coverData: coverBase64,
+                    lyrics: document.getElementById('trackLyrics').value.trim(),
                     timestamp: Date.now()
                 });
 
                 successDiv.textContent = '✅ Трек успешно загружен!';
 
                 document.getElementById('trackTitle').value = '';
+                document.getElementById('trackLyrics').value = '';
                 document.getElementById('audioFile').value = '';
                 document.getElementById('coverFile').value = '';
                 document.getElementById('coverPreview').innerHTML = '';
@@ -1060,6 +1076,7 @@
                                            </button>`
                                         : `<span style="padding: 10px; color:#999;">❤️ ${likesCount}</span>`
                                     }
+                                    ${track.lyrics ? `<button onclick="showLyrics('${track.id}')" style="background:transparent;border:2px solid #667eea;color:#667eea;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;transition:all 0.3s;" onmouseover="this.style.background='#667eea';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#667eea'">📝 Текст</button>` : ''}
                                     ${currentUser === track.author || currentUser === 'admin'
                                         ? `<button class="delete-btn" onclick="deleteTrack('${track.id}')">🗑️ Удалить</button>`
                                         : ''
@@ -1127,6 +1144,16 @@
                 console.error('Error toggling like:', error);
                 alert('Ошибка: ' + error.message);
             }
+        }
+
+        function showLyrics(trackId) {
+            const track = window.tracksCache && window.tracksCache[trackId];
+            if (!track || !track.lyrics) return;
+
+            document.getElementById('lyricsTitleModal').textContent = '📝 ' + track.title;
+            document.getElementById('lyricsAuthorModal').textContent = '👤 ' + track.author;
+            document.getElementById('lyricsText').textContent = track.lyrics;
+            document.getElementById('lyricsModal').style.display = 'block';
         }
 
         async function showSaved() {
