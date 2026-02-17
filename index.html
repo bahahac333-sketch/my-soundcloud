@@ -916,13 +916,23 @@
             tracksDiv.innerHTML = '<div class="loading">⏳ Загрузка треков...</div>';
 
             try {
-                // Remove old listener if exists
                 if (tracksListener) {
                     database.ref('tracks').off('value', tracksListener);
                 }
 
-                // Listen for real-time updates
+                // Timeout — если за 8 сек не загрузилось, показать ошибку
+                const timeout = setTimeout(() => {
+                    tracksDiv.innerHTML = `
+                        <div class="empty-state">
+                            <h3>⚠️ Ошибка подключения к Firebase</h3>
+                            <p style="margin-top:10px;">Откройте <b>Firebase Console → Realtime Database → Правила</b> и установите:<br><br>
+                            <code style="background:#333;color:#ff8800;padding:10px;border-radius:8px;display:inline-block;margin-top:8px;">{ "rules": { ".read": true, ".write": true } }</code><br><br>
+                            После этого обновите страницу.</p>
+                        </div>`;
+                }, 8000);
+
                 tracksListener = database.ref('tracks').on('value', async (snapshot) => {
+                    clearTimeout(timeout);
                     const tracksData = snapshot.val();
                     
                     if (!tracksData) {
@@ -990,6 +1000,16 @@
                         </div>
                         `;
                     }).join('');
+                }, (error) => {
+                    clearTimeout(timeout);
+                    console.error('Firebase error:', error);
+                    tracksDiv.innerHTML = `
+                        <div class="empty-state">
+                            <h3>⚠️ Нет доступа к базе данных</h3>
+                            <p style="margin-top:10px;">Откройте <b>Firebase Console → Realtime Database → Правила</b> и установите:<br><br>
+                            <code style="background:#333;color:#ff8800;padding:10px;border-radius:8px;display:inline-block;margin-top:8px;">{ "rules": { ".read": true, ".write": true } }</code><br><br>
+                            После этого обновите страницу.</p>
+                        </div>`;
                 });
             } catch (error) {
                 console.error('Error loading tracks:', error);
