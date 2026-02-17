@@ -33,6 +33,11 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
+        @keyframes playingPulse {
+            0%, 100% { box-shadow: 0 10px 30px rgba(255,85,0,0.4); }
+            50% { box-shadow: 0 10px 40px rgba(255,85,0,0.8); }
+        }
+
         @keyframes wave {
             0%, 100% { height: 20%; }
             50% { height: 100%; }
@@ -1069,7 +1074,7 @@
                                 <div class="track-title">${track.title}</div>
                                 <div class="track-author">👤 ${track.author}</div>
                                 <div class="track-controls">
-                                    <button class="play-btn" onclick="playTrackById('${track.id}')">▶</button>
+                                    <button class="play-btn" id="playcard-${track.id}" onclick="playTrackById('${track.id}')">▶</button>
                                     ${currentUser
                                         ? `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${track.id}')" id="like-${track.id}">
                                             ${isLiked ? '❤️' : '🤍'} <span id="count-${track.id}">${likesCount}</span>
@@ -1101,10 +1106,53 @@
             }
         }
 
-        // Play track by ID from memory cache
         function playTrackById(trackId) {
             const track = window.tracksCache && window.tracksCache[trackId];
-            if (track) playTrack(track);
+            if (!track) return;
+
+            const audioPlayer = document.getElementById('audioPlayer');
+
+            // If same track is playing — toggle pause/play
+            if (currentTrack && currentTrack.id === trackId) {
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    document.getElementById('playPauseBtn').textContent = '⏸';
+                    setTrackCardState(trackId, true);
+                } else {
+                    audioPlayer.pause();
+                    document.getElementById('playPauseBtn').textContent = '▶';
+                    setTrackCardState(trackId, false);
+                }
+                return;
+            }
+
+            // New track — reset previous card
+            if (currentTrack) {
+                setTrackCardState(currentTrack.id, false);
+            }
+
+            playTrack(track);
+        }
+
+        function setTrackCardState(trackId, isPlaying) {
+            const btn = document.getElementById('playcard-' + trackId);
+            if (!btn) return;
+            const card = btn.closest('.track-item');
+            if (isPlaying) {
+                btn.innerHTML = '⏸';
+                btn.style.background = 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)';
+                if (card) {
+                    card.style.border = '2px solid #ff5500';
+                    card.style.animation = 'playingPulse 2s infinite';
+                }
+            } else {
+                btn.innerHTML = '▶';
+                btn.style.background = 'linear-gradient(135deg, #ff5500 0%, #ff8800 100%)';
+                if (card) {
+                    card.style.border = '';
+                    card.style.animation = 'fadeIn 0.5s ease';
+                }
+            }
         }
 
         async function toggleLike(trackId) {
@@ -1215,69 +1263,80 @@
         function playTrack(track) {
             const player = document.getElementById('player');
             const audioPlayer = document.getElementById('audioPlayer');
-            const playerCover = document.getElementById('playerCover');
-            const playerTitle = document.getElementById('playerTitle');
-            const playerAuthor = document.getElementById('playerAuthor');
 
             currentTrack = track;
             audioPlayer.src = track.audioData || track.audioURL;
-            playerCover.src = track.coverData || track.coverURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70"><rect width="70" height="70" fill="%23667eea"/></svg>';
-            playerTitle.textContent = track.title;
-            playerAuthor.textContent = track.author;
-            
+            document.getElementById('playerCover').src = track.coverData || track.coverURL || '';
+            document.getElementById('playerTitle').textContent = track.title;
+            document.getElementById('playerAuthor').textContent = track.author;
+
             player.style.display = 'block';
             audioPlayer.play();
             document.getElementById('playPauseBtn').textContent = '⏸';
-            
+
+            // Highlight card
+            setTrackCardState(track.id, true);
+
+            // When track ends — reset card
+            audioPlayer.onended = () => {
+                document.getElementById('playPauseBtn').textContent = '▶';
+                setTrackCardState(track.id, false);
+            };
+
             setupAudioListeners();
+        }
+
+        function togglePlay() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const btn = document.getElementById('playPauseBtn');
+
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                btn.textContent = '⏸';
+                if (currentTrack) setTrackCardState(currentTrack.id, true);
+            } else {
+                audioPlayer.pause();
+                btn.textContent = '▶';
+                if (currentTrack) setTrackCardState(currentTrack.id, false);
+            }
         }
 
         function setupAudioListeners() {
             const audioPlayer = document.getElementById('audioPlayer');
             const seekSlider = document.getElementById('seekSlider');
             const volumeSlider = document.getElementById('volumeSlider');
-            
+
             audioPlayer.removeEventListener('timeupdate', updateProgress);
             audioPlayer.addEventListener('timeupdate', updateProgress);
-            
+
             audioPlayer.addEventListener('loadedmetadata', function() {
                 document.getElementById('duration').textContent = formatTime(audioPlayer.duration);
             });
-            
+
             seekSlider.removeEventListener('input', handleSeek);
             seekSlider.addEventListener('input', handleSeek);
-            
+
             volumeSlider.removeEventListener('input', handleVolume);
             volumeSlider.addEventListener('input', handleVolume);
-            
-            audioPlayer.addEventListener('ended', function() {
-                document.getElementById('playPauseBtn').textContent = '▶';
-            });
         }
 
         function handleSeek() {
             const audioPlayer = document.getElementById('audioPlayer');
             const seekSlider = document.getElementById('seekSlider');
-            const seekTime = (audioPlayer.duration * seekSlider.value) / 100;
-            audioPlayer.currentTime = seekTime;
+            audioPlayer.currentTime = (audioPlayer.duration * seekSlider.value) / 100;
         }
 
         function handleVolume() {
             const audioPlayer = document.getElementById('audioPlayer');
-            const volumeSlider = document.getElementById('volumeSlider');
-            audioPlayer.volume = volumeSlider.value / 100;
+            audioPlayer.volume = document.getElementById('volumeSlider').value / 100;
             updateVolumeIcon();
         }
 
         function updateProgress() {
             const audioPlayer = document.getElementById('audioPlayer');
-            const seekSlider = document.getElementById('seekSlider');
-            const currentTimeDisplay = document.getElementById('currentTime');
-            
             if (audioPlayer.duration) {
-                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                seekSlider.value = progress;
-                currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
+                document.getElementById('seekSlider').value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                document.getElementById('currentTime').textContent = formatTime(audioPlayer.currentTime);
             }
         }
 
@@ -1287,21 +1346,6 @@
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
-
-        function togglePlay() {
-            const audioPlayer = document.getElementById('audioPlayer');
-            const btn = document.getElementById('playPauseBtn');
-            
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                btn.textContent = '⏸';
-            } else {
-                audioPlayer.pause();
-                btn.textContent = '▶';
-            }
-        }
-
-        function toggleMute() {
             const audioPlayer = document.getElementById('audioPlayer');
             const volumeSlider = document.getElementById('volumeSlider');
             
