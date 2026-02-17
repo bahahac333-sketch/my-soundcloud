@@ -255,6 +255,27 @@ input[type="file"] { display:none; }
     </div>
 </div>
 
+<!-- USER PROFILE VIEW -->
+<div id="userProfM" class="modal">
+    <div class="mbox wide">
+        <span class="mclose" onclick="cm('userProfM')">&times;</span>
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px;flex-wrap:wrap;">
+            <div class="p-av" id="upAv">👤</div>
+            <div>
+                <h2 id="upName" style="margin-bottom:8px;"></h2>
+                <p id="upBio" style="color:#aaa;font-size:13px;margin-bottom:12px;"></p>
+                <div style="display:flex;gap:22px;">
+                    <div><div class="stn" id="upTracks">0</div><div class="stl">Треки</div></div>
+                    <div><div class="stn" id="upLikes">0</div><div class="stl">Лайки</div></div>
+                    <div><div class="stn" id="upPlays">0</div><div class="stl">Прослушивания</div></div>
+                </div>
+            </div>
+        </div>
+        <h3 style="margin-bottom:14px;color:#333;">🎵 Треки</h3>
+        <div id="upTracksList"></div>
+    </div>
+</div>
+
 <!-- UPLOAD -->
 <div id="uploadSec" class="upload-section">
     <h2 style="margin-bottom:18px;color:#333;">📤 Загрузить трек</h2>
@@ -524,12 +545,32 @@ async function loadTracks() {
         clearTimeout(to);
         const data=snap.val();
         if(!data){ div.innerHTML='<div class="empty"><h3>🎵 Пока нет треков</h3><p>Загрузите первый!</p></div>'; g('sotdSec').style.display='none'; return; }
-        tCache={};
-        Object.values(data).forEach(t=>tCache[t.id]=t);
+
+        // Check if only plays changed — if so, skip full re-render
+        const newCache = {};
+        Object.values(data).forEach(t=>newCache[t.id]=t);
+        const prevIds = Object.keys(tCache).sort().join(',');
+        const newIds = Object.keys(newCache).sort().join(',');
+        const onlyPlaysChanged = prevIds === newIds && prevIds !== '' &&
+            Object.keys(newCache).every(id => {
+                const old = tCache[id], nw = newCache[id];
+                if (!old) return false;
+                return old.title===nw.title && old.author===nw.author &&
+                       old.coverData===nw.coverData && old.lyrics===nw.lyrics;
+            });
+
+        tCache = newCache;
+
+        if (onlyPlaysChanged) return; // plays RT listener handles counter update
+
         const ls=await db.ref('likes').once('value'), allLk=ls.val()||{};
         const lkMap={}, ulikes=new Set();
         Object.values(allLk).forEach(l=>{ lkMap[l.trackId]=(lkMap[l.trackId]||0)+1; if(CU&&l.userId===CU) ulikes.add(l.trackId); });
         const tracks=Object.values(data).sort((a,b)=>(lkMap[b.id]||0)-(lkMap[a.id]||0));
+
+        // Save main queue order for autoplay
+        window.mainQueue = tracks.map(t=>t.id);
+
         renderSotd(tracks,lkMap);
         renderTracks(tracks,lkMap,ulikes);
     }, ()=>{ div.innerHTML='<div class="empty"><h3>⚠️ Нет доступа</h3><p>Настройте правила Firebase</p></div>'; });
@@ -547,7 +588,7 @@ function renderTracks(tracks,lkMap,ulikes) {
             </div>
             <div class="tr-info">
                 <div class="tr-title">${t.title}</div>
-                <div class="tr-author">👤 ${t.author}</div>
+                <div class="tr-author" onclick="viewUserProfile('${t.author}')" style="cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='#ff5500'" onmouseout="this.style.color='#aaa'">👤 ${t.author}</div>
                 <div class="tr-stats">
                     <span>❤️ <b id="lk-${t.id}">${lk}</b></span>
                     <span>▶ <b id="pl-${t.id}">${t.plays||0}</b> прослушиваний</span>
@@ -611,8 +652,12 @@ function playById(id) {
 }
 
 function autoNext(curId) {
-    const idx=savedQueue.findIndex(id=>id===curId);
-    if(idx>=0&&idx<savedQueue.length-1) setTimeout(()=>playById(savedQueue[idx+1]),600);
+    // Use savedQueue if it was triggered from saved, else use mainQueue
+    const queue = (savedQueue.includes(curId) && savedQueue.length > 1) ? savedQueue : (window.mainQueue || []);
+    const idx = queue.findIndex(id => id === curId);
+    if (idx >= 0 && idx < queue.length - 1) {
+        setTimeout(() => playById(queue[idx + 1]), 600);
+    }
 }
 
 function setCard(id,pl) {
@@ -667,7 +712,56 @@ async function toggleLike(tid) {
     }
 }
 
-// ── LYRICS ────────────────────────────────────────────────────
+// ── VIEW OTHER USER PROFILE ───────────────────────────────────
+async function viewUserProfile(username) {
+    // If own profile — open settings profile
+    if (username === CU) { openProfile(); return; }
+
+    om('userProfM');
+    g('upName').textContent = '👤 ' + username;
+    g('upBio').textContent = '';
+    g('upAv').textContent = '👤';
+    g('upTracksList').innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">⏳ Загрузка...</div>';
+
+    // Load user data
+    const uSnap = await db.ref('users/' + username).once('value');
+    const ud = uSnap.val() || {};
+    if (ud.avatar) g('upAv').innerHTML = `<img src="${ud.avatar}">`;
+    if (ud.bio) g('upBio').textContent = ud.bio;
+    if (ud.displayName) g('upName').textContent = (ud.displayName || username);
+
+    // Get their tracks
+    const mine = Object.values(tCache).filter(t => t.author === username);
+    mine.sort((a, b) => b.timestamp - a.timestamp);
+    g('upTracks').textContent = mine.length;
+
+    // Stats
+    const ls = await db.ref('likes').once('value');
+    const allLk = ls.val() || {};
+    const lkMap = {};
+    Object.values(allLk).forEach(l => { lkMap[l.trackId] = (lkMap[l.trackId]||0)+1; });
+    let totLk = 0, totPl = 0;
+    mine.forEach(t => { totPl += t.plays||0; totLk += lkMap[t.id]||0; });
+    g('upLikes').textContent = totLk;
+    g('upPlays').textContent = totPl;
+
+    if (!mine.length) {
+        g('upTracksList').innerHTML = '<p style="text-align:center;color:#aaa;padding:25px;">Нет треков</p>';
+        return;
+    }
+
+    g('upTracksList').innerHTML = mine.map(t => `
+        <div class="qi">
+            <img class="qcover" src="${t.coverData||dcov(52)}" alt="">
+            <div class="qinfo">
+                <div class="qtitle">${t.title}</div>
+                <div class="qmeta">❤️ ${lkMap[t.id]||0} · ▶ ${t.plays||0}</div>
+            </div>
+            <button class="qplay" onclick="playById('${t.id}');cm('userProfM')">▶</button>
+        </div>`).join('');
+}
+
+
 function showLyrics(id){
     const t=tCache[id]; if(!t||!t.lyrics) return;
     g('lyrTitle').textContent='📝 '+t.title;
